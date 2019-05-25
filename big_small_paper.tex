@@ -1,0 +1,377 @@
+\documentclass{article}
+\usepackage{fullpage}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage[hidelinks]{hyperref}
+\usepackage[usenames,dvipsnames]{color}
+
+\bibliographystyle{plainnat}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyfoot{}
+\fancyhead[RO]{\small\thepage}
+\fancyhead[LE]{\small\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\renewcommand{\P}{\mathbb{P}}
+\newcommand{\E}{\mathbb{E}}
+\DeclareMathOperator{\var}{var}
+\DeclareMathOperator{\cov}{cov}
+\newcommand{\deq}{\overset{\scriptscriptstyle{d}}{=}}
+\DeclareMathOperator{\Pois}{Pois}
+\newcommand{\given}{\,\vert\,}
+\newcommand{\Given}{\,\bigg\vert\,}
+\newcommand{\st}{\,\colon\,} % such that
+\newcommand{\floor}[1]{{\left\lfloor #1 \right\rfloor }}
+\newcommand{\one}{\mathbf{1}}
+\newcommand{\aprod}[2]{{\langle{#1},{#2}\rangle}}
+
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{assumption}{Assumption}
+\newtheorem{theorem}{Theorem}
+
+\newcommand{\plr}[1]{{ \color{blue} #1}}
+
+\title{Gene flow in patchy environments}
+
+\date{\normalsize\today}
+
+\author[1]{Alison M.~Etheridge}
+\author[2]{Peter L.~Ralph}
+\author[1]{Aaron S.~A.~Smith}
+\affil[1]{Department of Statistics, University of Oxford}
+\affil[2]{Institute for Ecology and Evolution, Departments of Mathematics and Biology, University of Oregon}
+
+%%%%% Running Title %%%%%%%%%%%%%%%%%%%%%%%
+
+\fancyhead[CO]{\MakeUppercase{\small{Gene flow in patchy environments}}}
+
+%%%%% Running Authors %%%%%%%%%%%%%%%%%%%%%
+
+\fancyhead[CE]{\MakeUppercase{\small{A.~M.~Etheridge, P.~L.~Ralph, A.~S.~A.~Smith}}}
+
+
+
+\begin{document}
+
+\maketitle
+
+\textbf{Title brainstorm space}
+\begin{itemize}
+    \item Gene flow and boom-bust populations
+    \item Tracking ancestry in patchy populations
+    \item Genealogies in transient population explosions
+    \item Genealogies of transient populations
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{abstract}
+    The demographic details of an individual-based stochastic population model
+    determine not only the time evolution of population sizes,
+    but also the dynamics of \emph{lineages} --
+    the description of where the ancestors of modern individuals lived at times in the past.
+    Here, we formulate several simple models of population dynamics
+    in which the motion of lineages traced back through time
+    can be explicitly described,
+    and highlight the role of the spatial and temporal autocorrelation structure
+    in determining long-term behavior of lineage movement.
+    The typical displacement between an individual
+    and their ancestor at some time in the past
+    may differ substantially from that predicted 
+    based on the typical displacement between parent and child.
+    SAY SOMETHING MORE CONCRETE ABOUT THE MODELS
+\end{abstract}
+
+\setcounter{tocdepth}{2}
+\tableofcontents
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction and motivation}
+
+The dynamics of a population 
+are determined by the demography of the individuals that make up the population:
+fecundities, mortalities, movement rates, and so forth.
+Stochastic population models can be lead to complex behavior,
+especially across continuous geography,
+and a great deal of work has focused on describing them (CITE).
+Inferring these demographic parameters of populations
+can be of substantial practical importance,
+as for instance when working to conserve an endangered species
+or to control an invasive species or disease vector.
+Although reproduction is a fundamental way by which populations grow,
+the genealogical connections between parents and offspring can be ignored
+if one is only interested in population size changes.
+However, these relationships clearly contain important information about population demography,
+and so there is substantial interest in using the patterns of relatedness inferred from genetic data
+to learn about the demographic dynamics and history of real populations.
+For instance, genome sequencing has provided surprising information about the history of our own species
+both in the recent and distance past (CITE).
+However, the relationship between population demographic dynamics
+and the resulting patterns of genealogical relationships have only been described
+in the simplest possible models.
+In this paper, we study how genealogical inheritance, traced back through time,
+is determined by the (forwards-time) process of population size changes.
+The models we study are greatly simplified,
+but are chosen to highlight the important aspects of this relationship.
+
+If we begin with a single individual from some population alive today 
+and choose a particular bit of her genome,
+then, looking back through history, 
+we can imagine recording the geographic location of the ancestor from whom that individual
+inherited that bit of genome.
+This spatial motion, as a function of amount of time in the past,
+we call a \emph{lineage}.
+For concreteness, suppse we follow inheritance of the chloroplast,
+and thus the maternal lineage, in a population of plants.
+Suppose we know the birth location of a given ancestor at a particular time.
+Roughly speaking, the location of the next ancestor might be chosen from among the possible ancestors,
+weighted by the reproductive output of those ancestors that established at that location
+at that time.
+On a broad scale, therefore,
+lineages when traced by through time should tend to follow regions of high population density,
+if the regions have correspondingly high total reproductive output.
+
+The \emph{dispersal distance}, $\sigma$, characterizes the typical distance between parent and offspring
+(concretely, it is the standard deviation of the displacement between the two along an arbitrary axis).
+Imagining a lineage as a random walk, one might guess that in a homogeneous population, 
+the distance from a given individual to their ancestor from $T$ generations ago
+is proportional to $\sigma \sqrt{T}$.
+Although this may be close in some cases, this can be dramatically wrong in others.
+The \emph{effective dispersal distance}
+is the corresponding quantity seen by averaging back along a lineage --
+if $D_t$ is the distance from an individual to their ancestor living $t$ generations ago,
+then $\var[D_t] \approx t \sigma_e^2$.
+For instance,
+if there is significant competition between siblings, 
+individuals that disperse further from their parents may be more successful.
+Since these long dispersers are more successful, they contribute more to the modern-day gene pool,
+and hence are more likely to be seen when looking back along a lineage --
+so, in this case, we would expect $\sigma_e > \sigma$.
+Conversely, if habitat quality is highly heterogeneous,
+so that longer-distance dispersers are likely to end up in an inhospitable region,
+then $\sigma_e$ may be substantially less than $\sigma$.
+More generally, spatial and temporal autocorrelation in habitat quality
+can lead to correlations between dispersal ability and long-term fitness,
+and therefore selection on dispersal ability itself (CITE).
+
+In this paper, we study the movement of linages in populations whose sizes
+are entirely determined by exogenous factors, e.g., transient, patchy resources.
+By varying the spatial and temporal autocorrelation of habitat quality in several models,
+we can highlight how these determine the long-term behavior of lineage movement,
+and hence spatial patterns of relatedness and gene flow.
+For a concrete situation, imagine that we are tracking populations of a soil microbe
+across a grassland, and the microbe is tightly associated with a particular type of shrub.
+A low density of microbes are found in the soil away from shrubs,
+but much higher densities live in the root zones of patches of shrubs
+that expand, contract, appear, and dissappear over time.
+New patches of shrubs initiate only rarely, but when they do,
+the lucky microbes living nearby to the location where the patch originated reproduce rapidly, 
+and since the area surrounding the patch produces very few offspring,
+the microbes found in that patch are descdendants of those initially lucky individuals
+for as long as the patch exists.
+This means that as one traces back the lineage of a microbe found in a patch today,
+the lineage must remain in that patch until its origination --
+and so, the motion of lineages is strongly constrained by the dynamics of the patches.
+
+Although it is not true in general,
+we put in place assumptions that make the location of a lineage,
+viewed moving back through time, a Markov process.
+Since the structure of the habitat is random,
+we are studying a random walk in a random environment,
+which XXX is something other people study too CITE.
+
+We begin with some calculations to motivate the model.
+Suppose that we study a species of plant that lives in discrete populations,
+and that every year, the entire population reproduces and then dies.
+To make things even simpler, we suppose that every individual makes a large number of seeds,
+-- the same number regardless of location --
+and that we only follow ancestry to the seed parent (ignoring pollen).
+Then, if the proportion of the seeds of a plant at location $x$
+that arrive at location $y$ is $m(x,y)$,
+and the number of individuals at location $x$ in the $k^\text{th}$ generation ago is $N(x,k)$,
+then the total number of seeds from $x$ that arrived at $y$ in the subsequent generation
+is proportional to $N(x,k) m(x,y)$.
+If all these seeds are roughly equivalent, so that the subsequent generation was composed of a random choice
+of all available seeds, then the chance that a given plant living at $y$ some $k-1$ generations ago
+grew from a seed originating in $x$ in the previous generation, is
+$\begin{aligned} \label{eqn:basic_movement}
+\frac{N(x,k) m(x,y)}{\sum_z N(z,k) m(z,y)},
+\end{aligned}$
+where the sum is over all locations.
+
+In this paper,
+we then assume that the lineage of an individual can be described as a Markov process given the population sizes --
+concretely, if $L_k$ is the location $k$ generations ago 
+of the (maternal) ancestor of a given individual who is today randomly chosen from $L(0)$,
+then given the population sizes histories $(N(z,k))_{z,k}$,
+the series of locations $(L_k)_{k \ge 0}$ forms a Markov chain with 
+$\P\{L_{k-1} = y \given L_k = x\}$ given by equation \eqref{eqn:basic_movement}.
+This is a standard assumption \citep{wakeley2009coalescent},
+and generally requires all population sizes to be large.
+Furthermore, we will assume that there are only two types of habitat, ``bad'' and ``good'',
+and that population sizes in ``good'' habitat are so large that, given the opportunity,
+lineages will always move from bad to good habitat.
+In the motivating example above, good habitat occurs where the shrub lives.
+Our analysis will occur mostly in one spatial dimension,
+beginning on the discrete lattice, with nearest-neighbor dispersal.
+We will assume that the habitat evolves according to a number of different Markov processes,
+each with the same stationary distribution (described below).
+Taking the environmental dynamics to be reversible and at stationarity,
+we can then simply track the dynamics of the lineage and the habitat together
+back into the remote past.
+In spite of its apparent simplicity,
+the model allows us to describe a number of important features of the general problem,
+while retaining some analytical and numerical tractability.
+
+
+The structure of the paper is as follows OR SOME TRANSITION HERE.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Outline of results}
+
+We begin with a random habitat on the one-dimensional lattice,
+with ``bad'' habitats encoded as 0 and ``good'' habitats encoded as 1.
+The spatial distribution of habitat at any particular time can be thought of as
+a sequence of ``patches'' of consective runs of 1s, separated by runs of at least one 0.
+We will model these by saying that each patch has a Geometric($q$) number of 1s,
+each space between two patches is composed of a Geometric($p$) number of 0s,
+and that all such are independent.
+In other words, the probability that the habitat at location zero is 1 is $p/(p+q)$,
+and the sequence of habitats one encounters as one walks along the lattice (in either direction)
+is a Markov chain that moves $1 \to 0$ with probability $q$ and moves $0 \to 1$ with probability $p$.
+(Note that in contrast to convention in some fields, $p$ is \emph{not} assumed to be $1-q$.)
+We will also specify the temporal dynamics of the habitat in a way that preserves this distribution.
+
+\subsection{No temporal correlations in habitat}
+The simplest case is when the habitat is simply resampled independently from this distribution
+every generation,
+and that offspring are divided evenly between the location of their parent and the locations
+directly on either side of the parent.
+
+\begin{lemma}
+    Suppose that the habitat is resampled independently in each generation,
+    and that $m(x,x) = m(x,x+1) = m(x,x-1) = 1/3$.
+    The variance of the displacement of an ancestral lineage over a single generation is 
+    $$\begin{aligned}
+        \var[L_1] = \frac{2}{3} + \frac{pq}{3(p+q)}\left(1 - (p+q)\right) .
+    \end{aligned}$$
+    In particular, lineages move faster than those in a homogeneous environment
+    if and only if $p+q < 1$.
+\end{lemma}
+
+The (elementary) proof is XXX LATER.
+
+In other words, 
+more positive spatial correlations in the environment cause the walk to move more quickly, 
+and more negative ones (ones more in the negative direction) 
+cause it to move more slowly. 
+The eigenvalues of the transition matrix of the environment 1 and $1 - (p + q)$, 
+so the transition corresponds to that from a smooth to an oscillating habitat.
+At first this result seems a little counterintuitive. 
+However, consider what happens when $p = q = 1$, 
+so that the habitat alternates between `good' and `bad' in space. 
+Then in each generation, 
+there is probability $1/2$ that the ancestral lineage does not move at all, 
+and probability $1/2$ that it moves to a neighbouring deme. 
+The variance of the movement of a lineage over one generation is then $1/2$, 
+less than the $2/3$ corresponding to the symmetric walk corresponding to $m$, 
+which chooses each of the three potential ancestral demes with equal probability.
+Conversely, if $p$ and $q$ are both small, then there is some chance a lineage will find itself
+near the edge of a large patch of good habitat, thus giving it an extra ``push''.
+However, the speed is maximized at $p=q=1/4$, but is only sped up by a factor of $33/32$:
+the effect is not large.
+
+It is also interesting to note that since the lineage only moves to bad habitat
+if there is no available good habitat,
+the proportion of the time a lineage spends in bad habitat is $q(1-p)^2/(p+q)$.
+This is the proportion of future generations who are direct descendants of today's bad habitats,
+i.e., proportional to the total long-term fitness of bad habitats.
+This is despite the fact that in any particular generation, the vast majority of individuals
+may live in good habitats --
+but, long-term genetic contributions to the population
+is mostly determined by who initiates new patches, rather than who lives in them.
+
+\subsection{Different intergeneration times for the habitat and the resident population}
+
+Of course, 
+there is no reason to suppose that the habitat and the resident population 
+have the same intergeneration time. 
+It is instructive to consider what happens if we suppose that several generations of the population
+pass during each time step of the habitat.
+Evidently, if the habitat never changes, 
+then any lineage will become ``trapped'' in a cluster of good habitat.
+
+It is tedious, but not difficult, to prove the following lemma.
+\begin{lemma}
+    Suppose that the habitat is resampled every two generations 
+    (in between which it is held fixed). 
+    The variance of the position of a lineage after two generations is
+    $\begin{aligned} \label{eqn:two_step}
+        \var[L_2] 
+            = \frac{4}{3} + 
+            \frac{pq}{18(p+q)} \left\{
+                47 - 77p - 62q + 27pq + 28p^2 + 7q^2
+            \right\} .
+    \end{aligned}$
+\end{lemma}
+
+The term $4/3$ in \eqref{eqn:two_step} 
+is precisely what we would have for the symmetric walk in a homogeneous environment. 
+If $p$ and $q$ are close to one then the second term is always negative, 
+and the walk slows down in the random environment.
+If $p$ and $q$ are close to zero, 
+then the walk always goes faster in the random than in the homogeneous environment, 
+but the factor $pq$ tells us that the effect is small.
+
+It is not hard to convince oneself that the longer the habitat is held fixed, 
+the smaller $p$ and $q$ must be 
+if ancestral lineages are not to be slowed down compared to simple random walk. 
+We require $q$ to be small in order that a cluster is big enough 
+that the motion of a lineage is not be too constrained before the habitat is resampled;
+we require $p$ to be small so that we rarely see clusters of favrouable environment 
+and so don’t become trapped.
+The longer the habitat is held constant, 
+(where time is measured in numbers of generations of the population), 
+the more the ancestral lineages will be slowed compared to those sampled from a homogeneous population. 
+Of course, holding the habitat constant and then resampling is not particularly natural, 
+and so we now turn to finding a Markovian evolution of the environment. 
+It is convenient to first recast our stationary distribution as a random cluster measure.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Discrete habitats and rapid turnover}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Rescaling to continuous landscapes}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Disucssion and two-dimensional landscapes}
+
+
+
+\appendix
+
+%%%%%%%%%%%%%%%%%%%%%%%
+\section{Proof of X}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+\section{Proof of Y}
+
+
+\end{document}
