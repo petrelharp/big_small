@@ -5,6 +5,8 @@
 \usepackage{natbib}
 \usepackage[hidelinks]{hyperref}
 \usepackage[usenames,dvipsnames]{color}
+\usepackage{authblk}
+\usepackage[margin = 1.5in, includehead, includefoot]{geometry}
 
 \bibliographystyle{plainnat}
 
@@ -16,6 +18,7 @@
 \fancyhead[LE]{\small\thepage}
 \renewcommand{\headrulewidth}{0pt}
 
+\newcommand{\rate}[2]{\text{rate}(#1\mapsto#2)}
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\Z}{\mathbb{Z}}
 \renewcommand{\P}{\mathbb{P}}
@@ -39,7 +42,7 @@
 
 \newcommand{\plr}[1]{{ \color{blue} #1}}
 
-\title{Gene flow in patchy environments}
+\title{Gene flow in patchy habitats}
 
 \date{\normalsize\today}
 
@@ -51,7 +54,7 @@
 
 %%%%% Running Title %%%%%%%%%%%%%%%%%%%%%%%
 
-\fancyhead[CO]{\MakeUppercase{\small{Gene flow in patchy environments}}}
+\fancyhead[CO]{\MakeUppercase{\small{Gene flow in patchy habitats}}}
 
 %%%%% Running Authors %%%%%%%%%%%%%%%%%%%%%
 
@@ -65,6 +68,7 @@
 
 \textbf{Title brainstorm space}
 \begin{itemize}
+    \item Life in a big-small world
     \item Gene flow and boom-bust populations
     \item Tracking ancestry in patchy populations
     \item Genealogies in transient population explosions
@@ -203,9 +207,9 @@ is proportional to $N(x,k) m(x,y)$.
 If all these seeds are roughly equivalent, so that the subsequent generation was composed of a random choice
 of all available seeds, then the chance that a given plant living at $y$ some $k-1$ generations ago
 grew from a seed originating in $x$ in the previous generation, is
-$\begin{aligned} \label{eqn:basic_movement}
-\frac{N(x,k) m(x,y)}{\sum_z N(z,k) m(z,y)},
-\end{aligned}$
+\begin{align} \label{eqn:basic_movement}
+    \frac{N(x,k) m(x,y)}{\sum_z N(z,k) m(z,y)},
+\end{align}
 where the sum is over all locations.
 
 In this paper,
@@ -237,7 +241,7 @@ The structure of the paper is as follows OR SOME TRANSITION HERE.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Outline of results}
+\section{Outline of results}
 
 We begin with a random habitat on the one-dimensional lattice,
 with ``bad'' habitats encoded as 0 and ``good'' habitats encoded as 1.
@@ -251,6 +255,21 @@ and the sequence of habitats one encounters as one walks along the lattice (in e
 is a Markov chain that moves $1 \to 0$ with probability $q$ and moves $0 \to 1$ with probability $p$.
 (Note that in contrast to convention in some fields, $p$ is \emph{not} assumed to be $1-q$.)
 We will also specify the temporal dynamics of the habitat in a way that preserves this distribution.
+
+The habitat is then described by a binary sequence $\omega \in \{0,1\}^\Z$,
+and we call the probability distribution above $\pi$.
+An equivalent description of $\pi$ is as a \emph{random cluster measure}, 
+also sometimes known as a Fortuin-Kasteleyn measure CITE.
+If $(e_0, e_1, \ldots, e_L)$ is a possible subsequence of habitats,
+with $e_0 = e_L = 0$ for definiteness,
+then the probability under $\pi$ that $\omega_{k+i} = e_i$ for all $0 \le i \le L$
+is
+% (q/(p+q)) (1-p)^(N0-Nc) (1-q)^(N1-Nc) p^Nc q^Nc
+\begin{align}
+    (1-p)^{N_0} (1-q)^{N_1} \left(\frac{pq}{(1-p)(1-q)}\right)^{N_c},
+\end{align}
+where $N_0$ and $N_1$ are the number of 0s and 1s, respectively,
+and $N_c$ is the number of ``patches'' of good habitat (i.e., the number of runs of 1s).
 
 \subsection{No temporal correlations in habitat}
 The simplest case is when the habitat is simply resampled independently from this distribution
@@ -291,6 +310,17 @@ near the edge of a large patch of good habitat, thus giving it an extra ``push''
 However, the speed is maximized at $p=q=1/4$, but is only sped up by a factor of $33/32$:
 the effect is not large.
 
+%%%%%%%%%%%% double-check that:
+% > pq <- expand.grid(p=seq(0,1,length.out=41),q=seq(0,1,length.out=41))
+% > f <- function (p,q) 2/3 + p*q*(1-p-q)/(3*(p+q))
+% > pq$z <- with(pq, f(p,q))
+% > f(1/4,1/4)
+% [1] 0.6875
+% > max(pq$z,na.rm=TRUE)
+% [1] 0.6875
+%%%%%%%%%%%
+
+
 It is also interesting to note that since the lineage only moves to bad habitat
 if there is no available good habitat,
 the proportion of the time a lineage spends in bad habitat is $q(1-p)^2/(p+q)$.
@@ -316,13 +346,13 @@ It is tedious, but not difficult, to prove the following lemma.
     Suppose that the habitat is resampled every two generations 
     (in between which it is held fixed). 
     The variance of the position of a lineage after two generations is
-    $\begin{aligned} \label{eqn:two_step}
+    \begin{align} \label{eqn:two_step}
         \var[L_2] 
             = \frac{4}{3} + 
             \frac{pq}{18(p+q)} \left\{
                 47 - 77p - 62q + 27pq + 28p^2 + 7q^2
             \right\} .
-    \end{aligned}$
+    \end{align}
 \end{lemma}
 
 The term $4/3$ in \eqref{eqn:two_step} 
@@ -340,6 +370,7 @@ We require $q$ to be small in order that a cluster is big enough
 that the motion of a lineage is not be too constrained before the habitat is resampled;
 we require $p$ to be small so that we rarely see clusters of favrouable environment 
 and so don’t become trapped.
+
 The longer the habitat is held constant, 
 (where time is measured in numbers of generations of the population), 
 the more the ancestral lineages will be slowed compared to those sampled from a homogeneous population. 
@@ -347,6 +378,74 @@ Of course, holding the habitat constant and then resampling is not particularly 
 and so we now turn to finding a Markovian evolution of the environment. 
 It is convenient to first recast our stationary distribution as a random cluster measure.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Changing habitats}
+
+Holding the habitat constant for a fixed number of generations and then (independently) resampling, 
+seems very artificial. 
+Instead we should like it to evolve according to a Markov process. 
+The simplest way to achieve this is to work in continuous time.
+
+We allow each deme to change state at an instantaneous rate that is chosen in such a way
+as to ensure that the detailed balance equations are satisfied, 
+so that the dynamics of the habitat is reversible, 
+and the distribution $\pi$ is stationary for the process. 
+There are many ways to do this,
+and part of our purpose is to compare 
+the effects on the motion of ancestral lineages of different dynamics of the habitat, 
+for which the underlying (stationary) distribution of the habitat is the same.
+
+To maintain detailed balance, we need to set things up so that
+the ratio of instantaneous transition rates between two configurations
+is equal to the ratio of their probabilities under $\pi$.
+The simplest way to do this is to flip one position at a time,
+with an instantaneous rate that depends only upon the states of its two nearest neighbours. 
+Concretely, if $\omega = (\ldots, \omega_{-1}, \omega_0, \omega_1, \ldots)$
+is the current state of the process, then $\omega_0$ will flip
+at a rate depending only on the triple $(\omega_{-1}, \omega_0, \omega_1)$.
+We must therefore specify rates for the four pairs: 
+$000 \leftrightarrow 010$,
+$001 \leftrightarrow 011$,
+$100 \leftrightarrow 110$,
+and $101 \leftrightarrow 111$.
+
+The first pair of rates gives us the instantaneous ates of
+ ``births'' and ``deaths'' of patches of good habitat.
+For detailed balance, we need the rates to satisfy
+\begin{align*}
+    \frac{\rate{000}{010}}{\rate{010}{000}}
+    =
+    \frac{\pi(\cdots010\cdots)}{\pi(\cdots000\cdots)}
+    =
+    \frac{(1-p)^2}{pq} .
+\end{align*}
+To do this, we define
+\begin{align}
+    \rate{000}{010} &= \gamma_b \frac{pq}{1-p}, \quad \text{and}\\
+    \rate{010}{000} &= \gamma_b (1-p) .
+\end{align}
+
+The second and third pair determine how fast the left and right boundaries of a patch move, respectively.
+It seems most parsimonius for these two to be symmetric,
+so we will set $\rate{001}{011} = \rate{100}{110}$ and $\rate{011}{001} = \rate{110}{100}$.
+Here, we need
+\begin{align*}
+    \frac{\rate{001}{011}}{\rate{001}{011}}
+    =
+    \frac{\pi(\cdots011\cdots)}{\pi(\cdots001\cdots)}
+    =
+    \frac{1-p}{1-q} ,
+\end{align*}
+so similar to before, we let
+\begin{align}
+    \rate{001}{011} &= \rate{100}{110} = \gamma_m (1-q), \quad \text{and} \\
+    \rate{011}{001} &= \rate{110}{100} = \gamma_m (1-p) .
+\end{align}
+
+The remaining pair of rates, at which $111 \leftrightarrow 101$,
+determines how fast patches split and merge.
+Although this is plausible, allowing split/merge events will greatly complicate the analysis,
+so as a final assumption we set these rates equal to zero.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -372,6 +471,10 @@ It is convenient to first recast our stationary distribution as a random cluster
 
 %%%%%%%%%%%%%%%%%%%%%%%
 \section{Proof of Y}
+
+
+\nocite{*}
+\bibliography{refs}
 
 
 \end{document}
