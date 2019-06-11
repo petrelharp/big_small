@@ -33,6 +33,7 @@
 \newcommand{\floor}[1]{{\left\lfloor #1 \right\rfloor }}
 \newcommand{\one}{\mathbf{1}}
 \newcommand{\aprod}[2]{{\langle{#1},{#2}\rangle}}
+\newcommand{\grad}{\nabla}
 
 \newtheorem{definition}{Definition}
 \newtheorem{lemma}{Lemma}
@@ -41,6 +42,7 @@
 \newtheorem{theorem}{Theorem}
 
 \newcommand{\plr}[1]{{ \color{blue} #1}}
+\newcommand{\details}[1]{\relax}
 
 \title{Gene flow in patchy habitats}
 
@@ -99,7 +101,100 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Introduction and motivation}
+\section{Diffusion approximations}
+
+Consider a population with more or less continuous density,
+and write the number of individuals per unit area around location $x$ as $\rho(x)$.
+Suppose that in each unit of time, each individual at $x$ 
+gives birth to an average of $\gamma(x)$ juvenile offspring,
+and then either dies (with probability $\mu(x)$) or survives.
+These juveniles each disperse to a nearby location $y$
+chosen with probability proportional to $q(y-x)$,
+and then ``establish'' there with probability $r(y)$ (otherwise, they die).
+The time dynamics of the population density $\rho$
+are determined by the fecundity $\gamma$, the dispersal distribution $q$,
+the recruitment rates $r$, and the death rates $\mu$.
+In general, we expect these rates to depend on the state of the population
+-- for instance, the local recruitment rate $r(x, t)$ may be a decreasing function
+of the population density $\rho(x, t)$.
+Of course, individuals are discrete, and we work in continuous space,
+so what exactly is the ``population density''?
+Our goal here is a heuristic derivation, so we'll ignore this,
+and move on to the question we are really interested in:
+how a lineage moves across space when looking back through time in this population.
+
+To answer this, we need to describe how likely a lineage is to move from location $y$ to location $x$.
+What is the probability that a randomly sampled individual from $y$
+has just been born to a parent who lived at $x$?
+At first, just consider the maternal parent.
+The net change in population density at $y$ between times $t - dt$ and $t$ is
+\begin{align*}
+    \rho(y, t) - \rho(y, t - dt)
+    \approx
+    dt \left\{
+        \int \rho(x, t) \gamma(x, t) q(y - x) r(y, t) dx - \mu(y, t) \rho(y, t) 
+    \right\} .
+\end{align*}
+The first term is the new individuals,
+so the probability that our randomly chosen individual at $y$ is newly established is
+this quantity divided by the local population size.
+Partitioning these newly establishing individuals,
+the probability that an individual at $y$ is newly established
+with a maternal parent in a unit of area $dx$ near $x$ at time $t$ is
+\begin{align*}
+    dt \frac{
+        \rho(x, t) \gamma(x, t) q(y - x) r(y, t) dx
+    }{ \rho(y, t) } .
+\end{align*}
+
+Next, we'll assume that the population density and related quantities
+change over a larger scale than dispersal.
+Let $R = (R_1, R_2)$ denote the random displacement from maternal parent to child
+in the two coordinate axes,
+so that $\P\{R = y\} = q(y)$,
+and suppose that the mean displacement is $\E[R] = m$.
+(Since we are in two dimensions, $m = (m_1, m_2)$ is a vector.)
+For simplicity, we assume displacements along the two coordinate axes 
+are uncorrelated and have equal variance,
+so that $\cov[R] = \sigma^2 I$, where $I$ is the identity matrix.
+Then, if $m$ and $\sigma^2$ are both small (and of the same order),
+using a Taylor series,
+\begin{align*}
+    \int f(x) q(y - x) dx
+    &= \int f(y - r) q(r) dr \\
+    &= \E[f(y - R)] \\
+    &\approx f(y) - m \cdot \grad f(y) + \frac{\sigma^2}{2} \nabla f(y) .
+\end{align*}
+\details{(There is also a term $\sum_{ij} m_i m_j \partial_{ij} f(y)$, but it is second-order in $m$.)}
+
+Using this, 
+if a lineage is at location $y$ at time $t$,
+then the mean displacement of the lineage at time $t - dt$ relative to $y$
+is
+\begin{align*}
+    \E[dL_t]
+    &=
+    \frac{dt}{\rho(y, t)} \int (x - y) \rho(x, t) \gamma(x, t) q(y - x) r(y, t) dx \\
+    &\approx
+    dt \frac{r(y, t)}{\rho(y, t)} m \cdot \grad\left( \rho \gamma \right)(y, t) \\
+    &=
+    dt r(y, t) \gamma(y, t) m \cdot \grad \log\left(\rho \gamma \right)(y, t) ,
+\end{align*}
+where $\grad(\rho \gamma)(y,t)$ is the gradient of the produce of $\rho$ and $gamma$,
+i.e., the gradient of the total production of offspring.
+Similarly,
+the variance of the displacement of the lineage is
+\begin{align*}
+    \var[dL_t]
+    &=
+    \frac{dt}{\rho(y, t)} \int (x - y)^2 \rho(x, t) \gamma(x, t) q(y - x) r(y, t) dx \\
+\end{align*}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{OLD Introduction and motivation}
 
 The dynamics of a population 
 are determined by the demography of the individuals that make up the population:
@@ -448,15 +543,18 @@ Although this is plausible, allowing split/merge events will greatly complicate 
 so as a final assumption we set these rates equal to zero.
 
 
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discrete habitats and rapid turnover}
 
-
+Proofs of whatever is left here.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Rescaling to continuous landscapes}
 
+Proofs of whatever is left here.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -465,6 +563,76 @@ so as a final assumption we set these rates equal to zero.
 
 
 \appendix
+
+
+%%%%%%%%%%%%%%%%%%%%%%%
+\section{Diffusion approximation}
+
+Here we will work through in more detail the arguments that lead to the diffusion approximation
+for a lineage in a continuous landscape.
+We still assume that the population has a continuous density,
+without examining in detail what that means or how it is determined by the vital rates.
+
+Recall that the rate of influx of establishing individuals from $x$ into $y$ at time $t$ is
+$\rho(x) q(y - x) r(y)$,
+and that the influx of pollen from $z$ into $x$ is $\rho(z) \delta(z) q_m(x - z)$.
+Let $R$ be a random seed dispersal displacement (i.e., $\P\{R = r\} = q(r)$),
+and let $S$ be a random pollen displacement (i.e., $\P\{S = r\} = q_m(r)$).
+Write $L_s$ for the location of the lineage $s$ units of time ago,
+and suppose that $L_0 = y$.
+Then, for a function $g( )$,
+\begin{align*}
+    \E[g(L_{ds}) \given L_0 = y]
+    &\approx
+        g(y) 
+        + \frac{1}{2} \frac{ds}{\rho(y)} \int \rho(x) \gamma(x) q(y - x) r(y) \left(g(x) - g(y)\right) dx \\
+    &\qquad{}
+        + \frac{1}{2} \frac{ds}{\rho(y)} \int \int \rho(z) \delta(z) q_m(x - z) \rho(x) \gamma(x) q(y - x) r(y) \left(g(z) - g(y)\right) dx \\
+    &=
+        g(y) 
+        + \frac{1}{2} \frac{ds}{\rho(y)} \E\left[ \rho(y - R) \gamma(y - R) r(y) \left(g(y - R) - g(y)\right) \right]  \\
+    &\qquad{}
+        + \frac{1}{2} \frac{ds}{\rho(y)} \E\left[ \rho(y - R - S) \delta(y - R - S) \rho(y - R) \gamma(y - R) r(y) \left(g(y - R - S) - g(y)\right) \right] .
+\end{align*}
+Now suppose that the mean and variance of $R$ and $S$ are all of the same small order:
+$\E[R] = m_m$ and $\cov[R] = \sigma_m^2 I$, while
+$\E[S] = m_p$ and $\cov[S] = \sigma_p^2 I$,
+with $m_m$, $m_p$, $\sigma_m^2$ and $\sigma_p^2$ all small and of similar size.
+Then, since $\E[R_i R_j] = \E[R_i] \E[R_j] + \cov[R_i, R_j] = (m_i m_j + \sigma^2 \delta_{ij})$,
+a Taylor expansion gives
+\begin{align*}
+    \E[f(R)]
+    &\approx
+        f(0) + \sum_i \E[R_i] \frac{d}{dx_i} f(0) 
+            + \sum_{ij} \E[R_i R_j] \frac{d^2}{dx_i dx_j} f(0) \\
+    &=
+        f(0) + m \cdot \grad f(0) + \sigma^2 \nabla f(0)
+            + \sum_{ij} m_i m_j \frac{d^2}{dx_i dx_j} f(0) \\
+    &=
+        f(0) + m \cdot \grad f(0) + \sigma^2 \nabla f(0) + O(|m|^2) .
+\end{align*}
+Applying this to the expression above,
+with $f(r) = \rho(y - r) \gamma(y - r) (g(y - r) - g(y))$,
+we get that
+\begin{align*}
+    \E\left[ \rho(y - R) \gamma(y - R) r(y) \left(g(y - R) - g(y)\right) \right]  
+    &\approx
+            - \rho(y) \gamma(y) m \cdot \grad g(y)
+            + \sigma^2 \grad(\rho \gamma)(y) \cdot \grad g(y)
+            + \sigma^2 \rho(y) \gamma(y) \nabla g(y)  \\
+    &=
+        \left\{
+            \left(\sigma^2 \grad(\rho \gamma)(y) - \rho(y) \gamma(y) m \right) \cdot \grad 
+            + \sigma^2 \rho(y) \gamma(y) \nabla 
+        \right\} g(y)
+\end{align*}
+Similarly, if we let $Z = R + S$, then since $\rho(y - R) = \rho(y - Z) + O(m_p) + O(\sigma^2_p)$,
+and $\E[Z] = m_m + m_p$ and $\cov[Z] = (\sigma_m^2 + \sigma_p^2) I$,
+XXX
+
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%
 \section{Proof of X}
