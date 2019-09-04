@@ -69,6 +69,7 @@
 \maketitle
 
 \textbf{Title brainstorm space}
+Note: need to make the title not just about big/small.
 \begin{itemize}
     \item Life in a big-small world
     \item Gene flow and boom-bust populations
@@ -99,102 +100,8 @@
 \setcounter{tocdepth}{2}
 \tableofcontents
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Diffusion approximations}
-
-Consider a population with more or less continuous density,
-and write the number of individuals per unit area around location $x$ as $\rho(x)$.
-Suppose that in each unit of time, each individual at $x$ 
-gives birth to an average of $\gamma(x)$ juvenile offspring,
-and then either dies (with probability $\mu(x)$) or survives.
-These juveniles each disperse to a nearby location $y$
-chosen with probability proportional to $q(y-x)$,
-and then ``establish'' there with probability $r(y)$ (otherwise, they die).
-The time dynamics of the population density $\rho$
-are determined by the fecundity $\gamma$, the dispersal distribution $q$,
-the recruitment rates $r$, and the death rates $\mu$.
-In general, we expect these rates to depend on the state of the population
--- for instance, the local recruitment rate $r(x, t)$ may be a decreasing function
-of the population density $\rho(x, t)$.
-Of course, individuals are discrete, and we work in continuous space,
-so what exactly is the ``population density''?
-Our goal here is a heuristic derivation, so we'll ignore this,
-and move on to the question we are really interested in:
-how a lineage moves across space when looking back through time in this population.
-
-To answer this, we need to describe how likely a lineage is to move from location $y$ to location $x$.
-What is the probability that a randomly sampled individual from $y$
-has just been born to a parent who lived at $x$?
-At first, just consider the maternal parent.
-The net change in population density at $y$ between times $t - dt$ and $t$ is
-\begin{align*}
-    \rho(y, t) - \rho(y, t - dt)
-    \approx
-    dt \left\{
-        \int \rho(x, t) \gamma(x, t) q(y - x) r(y, t) dx - \mu(y, t) \rho(y, t) 
-    \right\} .
-\end{align*}
-The first term is the new individuals,
-so the probability that our randomly chosen individual at $y$ is newly established is
-this quantity divided by the local population size.
-Partitioning these newly establishing individuals,
-the probability that an individual at $y$ is newly established
-with a maternal parent in a unit of area $dx$ near $x$ at time $t$ is
-\begin{align*}
-    dt \frac{
-        \rho(x, t) \gamma(x, t) q(y - x) r(y, t) dx
-    }{ \rho(y, t) } .
-\end{align*}
-
-Next, we'll assume that the population density and related quantities
-change over a larger scale than dispersal.
-Let $R = (R_1, R_2)$ denote the random displacement from maternal parent to child
-in the two coordinate axes,
-so that $\P\{R = y\} = q(y)$,
-and suppose that the mean displacement is $\E[R] = m$.
-(Since we are in two dimensions, $m = (m_1, m_2)$ is a vector.)
-For simplicity, we assume displacements along the two coordinate axes 
-are uncorrelated and have equal variance,
-so that $\cov[R] = \sigma^2 I$, where $I$ is the identity matrix.
-Then, if $m$ and $\sigma^2$ are both small (and of the same order),
-using a Taylor series,
-\begin{align*}
-    \int f(x) q(y - x) dx
-    &= \int f(y - r) q(r) dr \\
-    &= \E[f(y - R)] \\
-    &\approx f(y) - m \cdot \grad f(y) + \frac{\sigma^2}{2} \nabla f(y) .
-\end{align*}
-\details{(There is also a term $\sum_{ij} m_i m_j \partial_{ij} f(y)$, but it is second-order in $m$.)}
-
-Using this, 
-if a lineage is at location $y$ at time $t$,
-then the mean displacement of the lineage at time $t - dt$ relative to $y$
-is
-\begin{align*}
-    \E[dL_t]
-    &=
-    \frac{dt}{\rho(y, t)} \int (x - y) \rho(x, t) \gamma(x, t) q(y - x) r(y, t) dx \\
-    &\approx
-    dt \frac{r(y, t)}{\rho(y, t)} m \cdot \grad\left( \rho \gamma \right)(y, t) \\
-    &=
-    dt r(y, t) \gamma(y, t) m \cdot \grad \log\left(\rho \gamma \right)(y, t) ,
-\end{align*}
-where $\grad(\rho \gamma)(y,t)$ is the gradient of the produce of $\rho$ and $gamma$,
-i.e., the gradient of the total production of offspring.
-Similarly,
-the variance of the displacement of the lineage is
-\begin{align*}
-    \var[dL_t]
-    &=
-    \frac{dt}{\rho(y, t)} \int (x - y)^2 \rho(x, t) \gamma(x, t) q(y - x) r(y, t) dx \\
-\end{align*}
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{OLD Introduction and motivation}
+\section*{Introduction}
 
 The dynamics of a population 
 are determined by the demography of the individuals that make up the population:
@@ -288,6 +195,9 @@ Since the structure of the habitat is random,
 we are studying a random walk in a random environment,
 which XXX is something other people study too CITE.
 
+
+\subsection*{The basic model}
+
 We begin with some calculations to motivate the model.
 Suppose that we study a species of plant that lives in discrete populations,
 and that every year, the entire population reproduces and then dies.
@@ -316,6 +226,8 @@ the series of locations $(L_k)_{k \ge 0}$ forms a Markov chain with
 $\P\{L_{k-1} = y \given L_k = x\}$ given by equation \eqref{eqn:basic_movement}.
 This is a standard assumption \citep{wakeley2009coalescent},
 and generally requires all population sizes to be large.
+
+We then work in two situations: XXX continuous, and patchy XXX.
 Furthermore, we will assume that there are only two types of habitat, ``bad'' and ``good'',
 and that population sizes in ``good'' habitat are so large that, given the opportunity,
 lineages will always move from bad to good habitat.
@@ -335,8 +247,129 @@ while retaining some analytical and numerical tractability.
 The structure of the paper is as follows OR SOME TRANSITION HERE.
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Diffusion approximations}
+
+Consider a population with more or less continuous density,
+and write the number of individuals per unit area around location $x$ as $\rho(x)$.
+Suppose that in each unit of time, each individual at $x$ 
+gives birth to an average of $\gamma(x)$ juvenile offspring,
+and then either dies (with probability $\mu(x)$) or survives.
+These juveniles each disperse to a nearby location $y$
+chosen with probability proportional to $q(y-x)$,
+and then ``establish'' there with probability $r(y)$ (otherwise, they die).
+The time dynamics of the population density $\rho$
+are determined by the fecundity $\gamma$, the dispersal distribution $q$,
+the recruitment rates $r$, and the death rates $\mu$.
+In general, we expect these rates to depend on the state of the population
+-- for instance, the local recruitment rate $r(x, t)$ may be a decreasing function
+of the population density $\rho(x, t)$.
+Of course, individuals are discrete, and we work in continuous space,
+so what exactly is the ``population density''?
+Our goal here is a heuristic derivation, so we'll ignore this,
+and move on to the question we are really interested in:
+how a lineage moves across space when looking back through time in this population.
+
+To answer this, we need to describe how likely a lineage is to move from location $y$ to location $x$.
+What is the probability that a randomly sampled individual from $y$
+has just been born to a parent who lived at $x$?
+At first, just consider the maternal parent.
+The net change in population density at $y$ between times $t - dt$ and $t$ is
+\begin{align*}
+    \rho(y, t) - \rho(y, t - dt)
+    \approx
+    \left\{
+        \int \rho(x, t) \gamma(x, t) q(y - x) r(y, t) dx - \mu(y, t) \rho(y, t) 
+    \right\} dt .
+\end{align*}
+The first term is the new individuals,
+so the probability that our randomly chosen individual at $y$ is newly established is
+this quantity divided by the local population size.
+Partitioning these newly establishing individuals,
+the probability that an individual at $y$ is newly established
+with a maternal parent in a unit of area $dx$ near $x$ at time $t$ is
+\begin{align} \label{eqn:jump_intro}
+    \frac{
+        \rho(x, t) \gamma(x, t) q(y - x) r(y, t)
+    }{ \rho(y, t) } dx dt .
+\end{align}
+
+Next, we'll assume that the population density and related quantities
+change over a larger scale than dispersal.
+Let $R = (R_1, R_2)$ denote the random displacement from maternal parent to child
+in the two coordinate axes,
+so that $\P\{R = y\} = q(y)$,
+and suppose that the mean displacement is $\E[R] = m$.
+(Since we are in two dimensions, $m = (m_1, m_2)$ is a vector.)
+For simplicity, we assume displacements along the two coordinate axes 
+are uncorrelated and have equal variance,
+so that $\cov[R] = \sigma^2 I$, where $I$ is the identity matrix.
+Then, if $m$ and $\sigma^2$ are both small (and of the same order),
+using a Taylor series,
+\begin{align} \label{eqn:taylor}
+    \int f(x) q(y - x) dx % &= \int f(y - r) q(r) dr \\
+    &= \E[f(y - R)] \\  % &= \E[f(y) - \E[R] \grad f(y) +  \ldots \\
+    &\approx f(y) - m \cdot \grad f(y) + \frac{\sigma^2}{2} \Delta f(y) ,
+\end{align}
+where $m \cdot \grad f(y) = \sum_i m_i \partial_{y_i} f(y)$
+and $\Delta f(y) = \sum_i \partial^2_{y_i} f(y)$.
+\details{(There is also a term $\sum_{ij} m_i m_j \partial_{ij} f(y)$, but it is second-order in $m$.)}
+
+If a lineage is at location $y$ at time $t$,
+then the mean displacement of the lineage at time $t - dt$ relative to $y$
+is the integral of equation \eqref{eqn:jump_intro} against $x - y$.
+Using the Taylor approximation \eqref{eqn:taylor} with $f(x) = (x - y) \rho(x,t) \gamma(x,t)$,
+this is
+\begin{align*}
+    \E[dL_t]
+    &=
+    \frac{dt}{\rho(y, t)} \int (x - y) \rho(x, t) \gamma(x, t) q(y - x) r(y, t) dx \\
+    &\approx
+    \frac{r(y, t)}{\rho(y, t)} \left\{
+            - m \left( \rho \gamma \right)(x, t)
+            + \frac{\sigma^2}{2} \grad\left( \rho \gamma \right)(y, t)
+        \right\} dt \\
+    &=
+    r(y, t) \gamma(y, t) \left\{
+        \frac{\sigma^2}{2} \grad \log\left(\rho \gamma \right)(y, t) 
+        - m 
+    \right\} dt,
+\end{align*}
+where $\grad(\rho \gamma)(y,t)$ is the gradient of the product of $\rho$ and $\gamma$,
+i.e., the gradient of the total production of offspring.
+Similarly,
+the variance of the displacement of the lineage is
+\begin{align*}
+    \E[dL_t^2]
+    &=
+        \frac{dt}{\rho(y, t)} \int (x - y)^2 \rho(x, t) \gamma(x, t) q(y - x) r(y, t) dx \\
+    &\approx 
+        % \frac{dt}{\rho(y, t)} \frac{\sigma^2}{2} \rho(y, t) \gamma(y, t) r(y, t) \\ &=
+        \frac{\sigma^2}{2} r(y, t) \gamma(y,t) dt .
+\end{align*}
+
+These describe the mean and variance of a time-inhomogeneous random walk across the landscape,
+that is driven by the population dynamics.
+If the displacements across many generations are sufficiently independent,
+then $L_t$ is well-approximated by the diffusion that satisfies
+\begin{align}
+    dL_t = \gamma(L_t) \rho(L_t)
+        \left\{
+            \left( \frac{\sigma^2}{2} \grad \log \left(\rho \gamma\right)(L_t) - m \right) dt
+            + \sigma dB_t
+        \right\} .
+\end{align}
+In words, this says that $L_t$ behaves like a Brownian motion
+run at speed $\sigma \gamma(y) \rho(y)$ when it is at location $y$,
+in the potential
+\begin{align}
+    V(y) = \left(\rho(y) \gamma(y)\right)^{\sigma/2} e^{-my/\sigma} .
+\end{align}
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Outline of results}
+\section{Discrete, patchy habitats}
 
 We begin with a random habitat on the one-dimensional lattice,
 with ``bad'' habitats encoded as 0 and ``good'' habitats encoded as 1.
@@ -558,7 +591,7 @@ Proofs of whatever is left here.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Disucssion and two-dimensional landscapes}
+\section{Discussion}
 
 
 
@@ -566,7 +599,7 @@ Proofs of whatever is left here.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%
-\section{Diffusion approximation}
+\section{More detailed diffusion approximation calculations}
 
 Here we will work through in more detail the arguments that lead to the diffusion approximation
 for a lineage in a continuous landscape.
