@@ -3,3 +3,4 @@
 *.out
 *.toc
 .*.swp
+__pycache__

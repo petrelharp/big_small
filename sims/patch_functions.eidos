@@ -1,0 +1,66 @@
+function (*) diff(numeric x) {
+    return x[1:(length(x) - 1)] - x[0:(length(x) - 2)];
+}
+
+function (*) InitLandscape(numeric n) {
+    x = rep(0.0, n);
+    x[0] = asFloat(runif(1) < PBAD / (PBAD + PGOOD));
+    for (k in 1:(n-1)) {
+        p = (x[k-1] == 0) ? PBAD else 1 - PGOOD;
+        x[k] = asFloat(runif(1) < p);
+    }
+    return x;
+}
+
+function (*) UpdateLandscape(numeric x) {
+    n = length(x);
+    lefts = which(diff(c(0, x)) > 0);
+    rights = which(diff(c(x, 0)) < 0);
+    np = size(lefts);
+    if (np > 0) {
+        gaps = c(lefts, n) - c(-1, rights) - 1;
+        ones = (lefts == rights);
+        for (k in seq(0, np-1)) {
+            // die?
+            if (ones[k] & (runif(1) < PATCHDEATH)) {
+                x[lefts[k]] = 0;
+            } else { // jitter?
+                if (runif(1) < JITTER) { // left boundary
+                    if (runif(1) < GROW_PROB) { // grow?
+                        if (gaps[k] > 1)
+                            x[lefts[k] - 1] = 1.0;
+                    } else { // shrink?
+                        if (!ones[k])
+                            x[lefts[k]] = 0.0;
+                    }
+                }
+                if (runif(1) < JITTER) { // right boundary
+                    if (runif(1) < GROW_PROB) { // grow
+                        if (gaps[k+1] > 1)
+                            x[rights[k] + 1] = 1.0;
+                    } else { // shrink?
+                        if (!ones[k])
+                            x[rights[k]] = 0.0;
+                    }
+                }
+            }
+        }
+    }
+    // births
+    lefts = which(diff(c(0, x)) > 0);
+    rights = which(diff(c(x, 0)) < 0);
+    np = size(lefts);
+    gaps = c(lefts, n) - c(-1, rights) - 1;
+    for (k in seq(0, length(gaps) - 1)) {
+        if (gaps[k] > 2) {
+            nb = rpois(1, PATCHBIRTH * (gaps[k] - 2));
+            start = c(-1, rights)[k] + 2;
+            end = c(lefts, n)[k] - 2;
+            locs = sample(start:end, nb);
+            x[locs] = 1.0;
+        }
+    }
+    return x;
+}
+
+
