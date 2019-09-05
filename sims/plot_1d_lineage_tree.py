@@ -40,46 +40,33 @@ for kv in sys.argv[4:]:
 if 'seed' not in kwargs:
     kwargs['seed'] = np.random.randint(10000)
 
+kwargs['seed'] = int(kwargs['seed'])
 np.random.seed(kwargs['seed'])
 
-def plot_lineage(ts, children, positions):
+def plot_lineages(ts, children, positions, max_time):
     """
     A plot of the lineages ancestral to the given children
     at the given positions.
     """
+    path_dict = sps.get_lineages(ts, children, positions, max_time)
     locs = ts.individual_locations
-    inds = ts.individuals_alive_at(0)
-    # will record here tuples of the form (time, x)
-    nodes = np.concatenate([ts.individual(i).nodes for i in children])
-    node_times = ts.tables.nodes.time
-    node_indivs = ts.tables.nodes.individual
-    paths = []
-    for p in positions:
-        tree = ts.at(p)
-        for u in nodes:
-            out = [np.array([locs[node_indivs[u], 0], node_times[u]])]
-            u = tree.parent(u)
-            while u is not tskit.NULL:
-                uind = node_indivs[u]
-                if uind is tskit.NULL:
-                    break
-                out.append(np.array([locs[uind, 0], node_times[u]]))
-                u = tree.parent(u)
-            paths.append(np.row_stack(out))
 
     fig = plt.figure(figsize=(9,9))
     ax = fig.add_subplot(111)
     ax.set_xlabel("position")
     ax.set_ylabel("time ago")
     xmax = np.ceil(max(locs[:,0]))
-    ymax = np.ceil(max(node_times))
+    ymax = np.ceil(max([np.max(u[:, 1]) for u in path_dict.values()]))
     ax.set_xlim(0, xmax)
     ax.set_ylim(0, ymax)
     colormap = lambda x: plt.get_cmap("cool")(x/max(ts.individual_ages))
-    treecolors = [plt.get_cmap("viridis")(x) for x in np.linspace(0, 1, len(positions))]
+    treecolors = {p : plt.get_cmap("viridis")(x)
+                  for p, x in zip(positions, np.linspace(0, 1, len(positions)))}
+    paths = []
     pathcolors = []
-    for c in treecolors:
-        pathcolors.extend([c] * num_positions)
+    for u, p in path_dict:
+        paths.append(path_dict[(u, p)])
+        pathcolors.append(treecolors[p])
 
     lc = cs.LineCollection(paths, linewidths=0.5, colors=pathcolors)
     ax.add_collection(lc)
@@ -124,9 +111,11 @@ patchvals = patchdata[:, 1:]
 patches = patch_polygons(patchtimes, patchvals)
 
 today = np.where(ts.individual_times == 0)[0]
-fig = plot_lineage(ts, 
-                   np.random.choice(today, num_indivs), 
-                   np.random.randint(0, ts.sequence_length - 1, num_positions))
+max_time = np.max(ts.individual_times[np.where(ts.tables.individuals.flags & pyslim.INDIVIDUAL_REMEMBERED)[0]])
+fig = plot_lineages(ts, 
+                    np.random.choice(today, num_indivs), 
+                    np.random.randint(0, ts.sequence_length - 1, num_positions),
+                    max_time)
 ax = fig.axes[0]
 ax.add_collection(patches)
 fig.savefig(outbase + ".lineages.png")

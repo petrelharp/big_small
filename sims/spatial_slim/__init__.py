@@ -2,6 +2,7 @@ import os, subprocess
 import scipy.stats
 import numpy as np
 import matplotlib
+import tskit
 
 # pop_width = 8.0, 
 # numgens = 100, 
@@ -64,3 +65,27 @@ def plot_density(ts, time, ax, scatter=True, alpha=0.8):
                alpha=alpha,
                zorder=-1)
 
+def get_lineages(ts, children, positions, max_time):
+    """
+    A plot of the lineages ancestral to the given children
+    at the given positions.
+    """
+    locs = ts.individual_locations
+    # will record here tuples of the form (time, x)
+    nodes = np.concatenate([ts.individual(i).nodes for i in children])
+    node_times = ts.tables.nodes.time
+    node_indivs = ts.tables.nodes.individual
+    paths = {}
+    for p in positions:
+        tree = ts.at(p)
+        for u in nodes:
+            out = [np.array([locs[node_indivs[u], 0], node_times[u]])]
+            u = tree.parent(u)
+            while u is not tskit.NULL:
+                uind = node_indivs[u]
+                if uind is tskit.NULL or ts.node(u).time > max_time:
+                    break
+                out.append(np.array([locs[uind, 0], node_times[u]]))
+                u = tree.parent(u)
+            paths[(u, p)] = np.row_stack(out)
+    return paths
