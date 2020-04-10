@@ -5,10 +5,12 @@ initialize() {
     initializeTreeSeq();
     
     if (!exists("OUTPATH"))
-      catn("Must define OUTPATH");
+      defineConstant("OUTPATH", "./");
     defineConstant("PATCHPATH", OUTPATH + ".landscape");
     if (!exists("NUMGENS"))
-      catn("Must define NUMGENS");
+      defineConstant("NUMGENS", 5000);
+    if (!exists("BURNIN"))
+      defineConstant("BURNIN", 1000);      
     if (!exists("W"))
       defineConstant("W", 1000.0);  // dimension of the simulated area
     if (!exists("K"))
