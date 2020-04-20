@@ -43,20 +43,17 @@ if 'seed' not in kwargs:
 kwargs['seed'] = int(kwargs['seed'])
 np.random.seed(kwargs['seed'])
 
-def plot_lineages(ts, children, positions, max_time):
+def plot_lineages(ts, ax, children, positions, max_time):
     """
     A plot of the lineages ancestral to the given children
     at the given positions.
     """
     path_dict = sps.get_lineages(ts, children, positions, max_time)
     locs = ts.individual_locations
-
-    fig = plt.figure(figsize=(9,9))
-    ax = fig.add_subplot(111)
-    ax.set_xlabel("position")
-    ax.set_ylabel("time ago")
     xmax = np.ceil(max(locs[:,0]))
     ymax = np.ceil(max([np.max(u[:, 1]) for u in path_dict.values()]))
+    ax.set_xlabel("geographic position")
+    ax.set_ylabel("time ago")
     ax.set_xlim(0, xmax)
     ax.set_ylim(0, ymax)
     colormap = lambda x: plt.get_cmap("cool")(x/max(ts.individual_ages))
@@ -67,10 +64,8 @@ def plot_lineages(ts, children, positions, max_time):
     for u, p in path_dict:
         paths.append(path_dict[(u, p)])
         pathcolors.append(treecolors[p])
-
     lc = cs.LineCollection(paths, linewidths=0.5, colors=pathcolors)
     ax.add_collection(lc)
-    return fig
 
 def patch_polygons(times, vals):
     active = []
@@ -110,12 +105,17 @@ patchtimes = patchdata[:, 0]
 patchvals = patchdata[:, 1:]
 patches = patch_polygons(patchtimes, patchvals)
 
-today = np.where(ts.individual_times == 0)[0]
-max_time = np.max(ts.individual_times[np.where(ts.tables.individuals.flags & pyslim.INDIVIDUAL_REMEMBERED)[0]])
-fig = plot_lineages(ts, 
-                    np.random.choice(today, num_indivs), 
-                    np.random.randint(0, ts.sequence_length - 1, num_positions),
-                    max_time)
+today = ts.individuals_alive_at(0)
+has_parents = ts.has_individual_parents()
+max_time = np.max(ts.individual_times[has_parents])
+if len(today) < num_indivs:
+    raise ValueError(f"Not enough individuals: only {len(today)} alive today!")
+
+fig, ax = plt.subplots(figsize=(9, 9))
+plot_lineages(ts, ax,
+              children=np.random.choice(today, num_indivs, replace=False),
+              positions=np.random.randint(0, ts.sequence_length - 1, num_positions),
+              max_time=max_time)
 ax = fig.axes[0]
 ax.add_collection(patches)
 fig.savefig(outbase + ".lineages.png")

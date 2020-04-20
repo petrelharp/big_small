@@ -74,6 +74,7 @@ def get_lineages(ts, children, positions, max_time):
     # will record here tuples of the form (time, x)
     nodes = np.concatenate([ts.individual(i).nodes for i in children])
     node_times = ts.tables.nodes.time
+    # careful: some are tskit.NULL
     node_indivs = ts.tables.nodes.individual
     paths = {}
     for p in positions:

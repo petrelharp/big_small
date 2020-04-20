@@ -1,0 +1,8 @@
+source("../patch_functions.eidos");
+
+landscape = InitLandscape(NGRID);
+for (gen in 1:(BURNIN+NUMGENS)) {
+  landscape = UpdateLandscape(landscape);
+  if (gen > BURNIN)
+    writeFile(PATCHPATH, gen + " " + paste(landscape), append=T);
+}

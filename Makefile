@@ -2,6 +2,8 @@
 
 all: big_small_paper.pdf
 
+big_small_paper.pdf : figures/patch_cartoon.pdf
+
 clean: 
 	-rm *.aux *.log *.lof *.lot *.fff *.ttt *.out *.bbl *.blg
 

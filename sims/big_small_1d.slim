@@ -5,7 +5,7 @@ initialize() {
     initializeTreeSeq();
     
     if (!exists("OUTPATH"))
-      defineConstant("OUTPATH", "./");
+      defineConstant("OUTPATH", "./sim");
     defineConstant("PATCHPATH", OUTPATH + ".landscape");
     if (!exists("NUMGENS"))
       defineConstant("NUMGENS", 5000);
