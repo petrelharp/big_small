@@ -24,11 +24,15 @@ for treefile in tsfiles:
     ts = pyslim.load(treefile)
     outbase = ".".join(treefile.split(".")[:-1])
 
-    today = np.where(ts.individual_times == 0)[0]
-    max_time = np.max(ts.individual_times[np.where(ts.tables.individuals.flags & pyslim.INDIVIDUAL_REMEMBERED)[0]])
+    today = ts.individuals_alive_at(0)
+    has_parents = ts.has_individual_parents()
+    max_time = np.max(ts.individual_times[has_parents])
+
+    if len(today) < num_indivs:
+        raise ValueError(f"Not enough individuals: only {len(today)} alive today!")
 
     path_dict = sps.get_lineages(ts, 
-                                 np.random.choice(today, num_indivs), 
+                                 np.random.choice(today, num_indivs, replace=False),
                                  np.linspace(0, ts.sequence_length - 1, num_positions),
                                  max_time)
     path_keys = list(path_dict.keys())
