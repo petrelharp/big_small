@@ -1,5 +1,6 @@
 import os, subprocess
 import scipy.stats
+import scipy.sparse
 import numpy as np
 import matplotlib
 import tskit
@@ -65,6 +66,7 @@ def plot_density(ts, time, ax, scatter=True, alpha=0.8):
                alpha=alpha,
                zorder=-1)
 
+
 def get_lineages(ts, children, positions, max_time):
     """
     A plot of the lineages ancestral to the given children
@@ -76,6 +78,7 @@ def get_lineages(ts, children, positions, max_time):
     node_times = ts.tables.nodes.time
     # careful: some are tskit.NULL
     node_indivs = ts.tables.nodes.individual
+    has_parents = ts.has_individual_parents()
     paths = {}
     for p in positions:
         tree = ts.at(p)
@@ -84,9 +87,56 @@ def get_lineages(ts, children, positions, max_time):
             u = tree.parent(u)
             while u is not tskit.NULL:
                 uind = node_indivs[u]
-                if uind is tskit.NULL or ts.node(u).time > max_time:
+                if (uind is tskit.NULL
+                        or ts.node(u).time > max_time
+                        or not has_parents[unid]):
                     break
                 out.append(np.array([locs[uind, 0], node_times[u]]))
                 u = tree.parent(u)
             paths[(u, p)] = np.row_stack(out)
     return paths
+
+
+def individual_node_matrix(ts):
+    """
+    Constructs the (num individuals x num nodes) matrix whose (i, j)th entry
+    is True if node j is a chromosome of individual i.
+    """
+    nodes = ts.tables.nodes
+    has_individual = np.where(nodes.individual >= 0)[0]
+    N = scipy.sparse.coo_matrix(
+            (np.repeat(True, len(has_individual)),
+             (nodes.individual[has_individual], has_individual)),
+            shape = (ts.num_individuals, ts.num_nodes), dtype='bool')
+    return N.tocsc()
+
+
+def node_relatedness_matrix(ts, left=0.0, right=None):
+    """
+    Constructs the sparse matrix whose [i,j]th entry gives the amount that
+    node j inherited *directly* from node i, i.e., the sum of the length
+    of all edges that have i as a parent and j as a child.
+
+    NOTE: columns of samples should sum to ts.sequence_length.
+    """
+    if right is None:
+        right = ts.sequence_length
+    edges = ts.tables.edges
+    R = scipy.sparse.coo_matrix((np.fmin(right, edges.right) - np.fmax(left, edges.left), 
+                                 (edges.parent, edges.child)), 
+                                shape = (ts.num_nodes, ts.num_nodes), dtype = 'float')
+    return R.tocsc()
+
+
+def individual_relatedness_matrix(ts, left=0.0, right=None):
+    """
+    Constructs the sparse matrix whose [i,j]th entry gives the amount that
+    individual j inherited *directly* from node i, i.e., the sum of the length
+    of all edges that have i as a parent and j as a child.
+    """
+    R = node_relatedness_matrix(ts, left=left, right=right)
+    N = individual_node_matrix(ts)
+    Nt = N.transpose()
+    return N @ R @ Nt
+
+

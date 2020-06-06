@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import sys
-import pyslim, tskit
 import numpy as np
+import pyslim, tskit
 import spatial_slim as sps
 
 usage = """
@@ -16,9 +16,6 @@ if len(sys.argv) < 2:
 
 tsfiles = sys.argv[1:]
 
-num_indivs = 100
-num_positions = 10
-
 for treefile in tsfiles:
     print("Doing {}.\n".format(treefile))
     ts = pyslim.load(treefile)
@@ -26,7 +23,16 @@ for treefile in tsfiles:
 
     today = ts.individuals_alive_at(0)
     has_parents = ts.has_individual_parents()
-    max_time = np.max(ts.individual_times[has_parents])
+
+    R = sps.individual_relatedness_matrix(ts)
+    R /= 2 * ts.sequence_length
+    locs = ts.individual_locations
+    times = ts.individual_times
+    dt = (times @ R - times)
+    dx = (locs[:,0] @ R - locs[:,0])
+    dy = (locs[:,1] @ R - locs[:,1])
+    var = (dx **2 + dy ** 2) / dt
+    assert(np.min(dt[has_parents]) > 0)
 
     if len(today) < num_indivs:
         raise ValueError(f"Not enough individuals: only {len(today)} alive today!")
