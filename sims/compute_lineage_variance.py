@@ -16,6 +16,13 @@ if len(sys.argv) < 2:
 
 tsfiles = sys.argv[1:]
 
+def quantile(x, q):
+    if hasattr(np, 'quantile'):
+        return list(np.quantile(x, q))
+    else:
+        x.sort()
+        return [x[int(len(x) * qq)] for qq in q]
+
 for treefile in tsfiles:
     outbase = ".".join(treefile.split(".")[:-1])
     outfile = outbase + ".variances.txt"
@@ -37,6 +44,6 @@ for treefile in tsfiles:
 
     with open(outfile, 'w') as f:
         print("\t".join(["mean", "stdev", "2.5%", "25%", "50%", "75%", "97.5%\n"]), file=f)
-        print("\t".join(map(str, [np.mean(var), np.std(var)] + [np.quantile(var, q) for q in [.025, .25, .5, .75, .975]])), file=f)
+        print("\t".join(map(str, [np.mean(var), np.std(var)] + quantile(var, [.025, .25, .5, .75, .975]))), file=f)
 
 print("Done.\n")
