@@ -1,5 +1,5 @@
 #!/usr/bin/env R --vanilla
-
+library(tidyverse)
 
 read_varfile <- function (vf) {
     info <- strsplit(gsub("GAMMA_B", "GAMMAB", gsub(".variances.txt", "", basename(vf))), "_")[[1]][-1]
@@ -15,11 +15,16 @@ read_varfile <- function (vf) {
 varfiles <- list.files("big_small_1d", "*.variances.txt", full.names=TRUE)
 vartables <- do.call(rbind, lapply(varfiles, read_varfile))
 
-gammas <- sort(unique(vartables$GAMMAB))
-speeds <- sapply(gammas, function (g) { coef(lm(variance ~ 0 + time, data=vartables, subset=(GAMMAB==g))) })
-gcols <- rainbow(1.5*length(gammas))
+speeds <- (vartables %>% group_by(GAMMAB, seed) %>% summarise(speed=coef(lm(variance ~ 0 + time))) %>% data.frame)
+gcols <- rainbow(1.5*nrow(speeds))
 
+pdf(file="speeds.pdf", width=6, height=3, pointsize=10)
+par(mar=c(4,3,1,1)+.1)
 layout(t(1:2))
 with(vartables, plot(variance ~ time, col=gcols[match(GAMMAB,gammas)], pch=20))
-for (k in seq_along(gammas)) { abline(0, speeds[k], col=gcols[k]) }
-plot(gammas, speeds, xlab=expression(gamma[b]), ylab="variance/time", col=gcols, pch=20, cex=3)
+for (k in 1:nrow(speeds)) { abline(0, speeds$speed[k], col=gcols[k]) }
+plot(speed ~ GAMMAB, data=speeds, xlab=expression(gamma[b]), ylab="variance/time",
+     col=gcols, pch=20, cex=1)
+with(speeds %>% group_by(GAMMAB) %>% summarise(speed=mean(speed)) %>% data.frame,
+     lines(GAMMAB, speed))
+dev.off()
