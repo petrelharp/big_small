@@ -7,24 +7,23 @@ read_varfile <- function (vf) {
     for (k in 1:(length(info)/2)) {
         params[[info[2*k-1]]] <- as.numeric(info[2*k])
     }
-    x <- read.table(vf)
-    names(x) <- c("time", "variance")
-    return(cbind(data.frame(params)[rep(1, nrow(x)),], x)[1:(nrow(x)-3), ])
+    x <- read.table(vf, header=TRUE, check.names=FALSE)
+    return(cbind(data.frame(params), x))
 }
 
 varfiles <- list.files("big_small_1d", "*.variances.txt", full.names=TRUE)
-vartables <- do.call(rbind, lapply(varfiles, read_varfile))
+varlist <- lapply(varfiles, read_varfile)
+names(varlist) <- basename(varfiles)
+varnames <- unique(do.call(c, lapply(varlist, names)))
+vartables <- data.frame(lapply(varnames, function (x) rep(NA, length(varfiles))))
+dimnames(vartables) <- list(basename(varfiles), varnames)
+for (vf in basename(varfiles)) {
+    x <- varlist[[vf]]
+    for (u in names(x)) {
+        vartables[vf, u] <- x[[u]][1]
+    }
+}
 
-speeds <- (vartables %>% group_by(GAMMAB, seed) %>% summarise(speed=coef(lm(variance ~ 0 + time))) %>% data.frame)
-gcols <- rainbow(1.5*nrow(speeds))
-
-pdf(file="speeds.pdf", width=6, height=3, pointsize=10)
-par(mar=c(4,3,1,1)+.1)
 layout(t(1:2))
-with(vartables, plot(variance ~ time, col=gcols[match(GAMMAB,gammas)], pch=20))
-for (k in 1:nrow(speeds)) { abline(0, speeds$speed[k], col=gcols[k]) }
-plot(speed ~ GAMMAB, data=speeds, xlab=expression(gamma[b]), ylab="variance/time",
-     col=gcols, pch=20, cex=1)
-with(speeds %>% group_by(GAMMAB) %>% summarise(speed=mean(speed)) %>% data.frame,
-     lines(GAMMAB, speed))
-dev.off()
+plot(mean ~ GAMMAB, data=vartables, subset=is.na(SD))
+plot(mean ~ GAMMAB, data=vartables, subset=!is.na(SD))
