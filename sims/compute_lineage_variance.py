@@ -38,8 +38,7 @@ for treefile in tsfiles:
     times = ts.individual_times
     dt = (times @ R - times)
     dx = (locs[:,0] @ R - locs[:,0])
-    dy = (locs[:,1] @ R - locs[:,1])
-    var = (dx **2 + dy ** 2) / dt
+    var = dx **2 / dt
     assert(np.min(dt[has_parents]) > 0)
 
     with open(outfile, 'w') as f:
