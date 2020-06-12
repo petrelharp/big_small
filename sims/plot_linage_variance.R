@@ -1,5 +1,4 @@
 #!/usr/bin/env R --vanilla
-library(tidyverse)
 
 read_varfile <- function (vf) {
     info <- strsplit(gsub("GAMMA_B", "GAMMAB", gsub(".variances.txt", "", basename(vf))), "_")[[1]][-1]
@@ -10,6 +9,11 @@ read_varfile <- function (vf) {
     x <- read.table(vf, header=TRUE, check.names=FALSE)
     return(cbind(data.frame(params), x))
 }
+
+# from big_small_1d.slim
+defaults <- list(
+                 SD = 1.0
+                 )
 
 varfiles <- list.files("big_small_1d", "*.variances.txt", full.names=TRUE)
 varlist <- lapply(varfiles, read_varfile)
@@ -22,8 +26,17 @@ for (vf in basename(varfiles)) {
     for (u in names(x)) {
         vartables[vf, u] <- x[[u]][1]
     }
+    for (u in setdiff(names(vartables), names(x))) {
+        vartables[vf, u] <- defaults[[u]]
+    }
 }
 
-layout(t(1:2))
-plot(mean ~ GAMMAB, data=vartables, subset=is.na(SD))
-plot(mean ~ GAMMAB, data=vartables, subset=!is.na(SD))
+pdf(file='speeds.pdf', width=8, height=4, pointsize=10)
+    layout(t(1:2))
+    for (this_sd in unique(vartables$SD)) {
+        plot(mean ~ GAMMAB, data=vartables, subset=(SD == this_sd), type='b',
+             main=sprintf("SD=%0.1f", this_sd),
+             xlab=expression(gamma[b]),
+             ylab="mean lineage variance per unit time")
+    }
+dev.off()
