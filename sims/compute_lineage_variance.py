@@ -43,7 +43,9 @@ for treefile in tsfiles:
     assert(np.min(dt[has_parents]) > 0)
 
     with open(outfile, 'w') as f:
-        print("\t".join(["mean", "stdev", "2.5%", "25%", "50%", "75%", "97.5%\n"]), file=f)
-        print("\t".join(map(str, [np.mean(var), np.std(var)] + quantile(var, [.025, .25, .5, .75, .975]))), file=f)
+        print("\t".join(["mean", "stdev", "2.5%", "25%", "50%", "75%", "97.5%"]), file=f)
+        print("\t".join(map(str,
+            [np.mean(var[has_parents]), np.std(var[has_parents])]
+            + quantile(var[has_parents], [.025, .25, .5, .75, .975]))), file=f)
 
 print("Done.\n")
