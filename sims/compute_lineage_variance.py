@@ -6,6 +6,10 @@ import pyslim, tskit
 import scipy
 import spatial_slim as sps
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 usage = """
 Estimates the variance per unit time of the linages in the provided tree sequences.
 Usage:
@@ -20,7 +24,8 @@ tsfiles = sys.argv[1:]
 for treefile in tsfiles:
     outbase = ".".join(treefile.split(".")[:-1])
     outfile = outbase + ".variances.txt"
-    print(f"Writing variances in {treefile} to {outfile}")
+    plotfile = outbase + ".variances.png"
+    print(f"Writing variances in {treefile} to {outfile} and plotting to {plotfile}")
     ts = pyslim.load(treefile)
 
     today = ts.individuals_alive_at(0)
@@ -52,5 +57,24 @@ for treefile in tsfiles:
         print("\t".join(map(str,
             [np.mean(vardt[has_parents_nodes]), np.std(vardt[has_parents_nodes])]
             + list(np.quantile(vardt[has_parents_nodes], [.025, .25, .5, .75, .975])))), file=f)
+
+
+    kde = scipy.stats.gaussian_kde(np.row_stack([dt[has_parents_nodes], np.sqrt(dx2[has_parents_nodes])]))
+    X, Y = np.meshgrid(
+            np.linspace(0.0, np.max(dt[has_parents_nodes]), 51),
+            np.linspace(0.0, np.max(np.sqrt(dx2[has_parents_nodes])), 51))
+    Z = kde([X.flatten(), Y.flatten()])
+    Z.shape = X.shape
+    fig, ax = plt.subplots(figsize=(9, 9))
+    ax.scatter(dt[has_parents_nodes], np.sqrt(dx2[has_parents_nodes]), s=5)
+    ax.set_xlabel("dt")
+    ax.set_ylabel("|dx|")
+    ax.contour(X, Y, Z,
+               colors='r',
+               alpha=0.95,
+               zorder=-1)
+
+    fig.savefig(plotfile)
+    plt.close(fig)
 
 print("Done.\n")
