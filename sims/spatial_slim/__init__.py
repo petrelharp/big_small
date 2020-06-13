@@ -5,10 +5,7 @@ import numpy as np
 import matplotlib
 import tskit
 
-# pop_width = 8.0, 
-# numgens = 100, 
-# sigma = 1.0, 
-# K = 5.0,
+from .patches import *
 
 def run_slim(script, seed = 23, 
              **kwargs):
@@ -89,7 +86,7 @@ def get_lineages(ts, children, positions, max_time):
                 uind = node_indivs[u]
                 if (uind is tskit.NULL
                         or ts.node(u).time > max_time
-                        or not has_parents[unid]):
+                        or not has_parents[uind]):
                     break
                 out.append(np.array([locs[uind, 0], node_times[u]]))
                 u = tree.parent(u)

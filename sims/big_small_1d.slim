@@ -31,13 +31,13 @@ initialize() {
     if (!exists("GAMMA_B"))
       defineConstant("GAMMA_B", 0.2); // relative rate of births/deaths
     if (!exists("GAMMA_M"))
-      defineConstant("GAMMA_M", 1.0); // relative rate of patch "jitter"
+      defineConstant("GAMMA_M", 0.2); // relative rate of patch "jitter"
     defineConstant("PATCHBIRTH", GAMMA_B * PBAD * PGOOD / (1 - PBAD));
     defineConstant("PATCHDEATH", GAMMA_B * (1 - PBAD));
     defineConstant("JITTER", GAMMA_M * (2 - PGOOD - PBAD));
     defineConstant("GROW_PROB", (1 - PGOOD) / (2 - PGOOD - PBAD));
-    defineConstant("BAD_F", 0.25); // relative fecundity out of patches
-    defineConstant("GOOD_F", 5.0); // relative fecundity in patches
+    defineConstant("BAD_F", 0.05); // relative fecundity out of patches
+    defineConstant("GOOD_F", 10.0); // relative fecundity in patches
     defineConstant("NSTEPS", 100); // number of sub-steps to make landscape continuous-time-like
     
     initializeMutationType("m1", 0.5, "g", 0.0, 2);

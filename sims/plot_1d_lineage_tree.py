@@ -9,7 +9,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.collections as cs
-from matplotlib.patches import Polygon
 
 usage = """
 Makes a plot of *lineages* moving back for the given number of
@@ -67,33 +66,6 @@ def plot_lineages(ts, ax, children, positions, max_time):
     lc = cs.LineCollection(paths, linewidths=0.5, colors=pathcolors)
     ax.add_collection(lc)
 
-def patch_polygons(times, vals):
-    active = []
-    finished = []
-    for t, x in zip(times, vals):
-        lefts = np.where(np.diff(np.concatenate([[0], x])) > 0)[0]
-        rights = np.where(np.diff(np.concatenate([x, [0]])) < 0)[0]
-        new = np.array([True for _ in lefts])
-        for k, u in enumerate(active):
-            try:
-                l = u[-1][1]
-                j = np.where(np.abs(lefts - l) <= 1)[0][0]
-                new[j] = False
-                u.append([t, lefts[j], rights[j]])
-            except IndexError:
-                # becomes inactive!
-                finished.append(u)
-                del active[k]
-        for j in np.where(new)[0]:
-            active.append([[t, lefts[j], rights[j]]])
-    finished.extend(active)
-    patches = []
-    for u in finished:
-        v = np.array(u)
-        v[:, 0] = ts.slim_generation - v[:, 0]
-        patches.append(Polygon(np.row_stack([v[:, [1,0]], v[::-1, [2,0]]])))
-    return cs.PatchCollection(patches, alpha=0.4)
-
 
 treefile = sps.run_slim(script = script, **kwargs)
 patchfile = treefile + ".landscape"
@@ -103,7 +75,7 @@ ts = pyslim.load(treefile)
 patchdata = np.loadtxt(patchfile)
 patchtimes = patchdata[:, 0]
 patchvals = patchdata[:, 1:]
-patches = patch_polygons(patchtimes, patchvals)
+patches = sps.patch_polygons(patchtimes, patchvals, ts.slim_generation)
 
 today = ts.individuals_alive_at(0)
 has_parents = ts.has_individual_parents()
@@ -116,7 +88,6 @@ plot_lineages(ts, ax,
               children=np.random.choice(today, num_indivs, replace=False),
               positions=np.random.randint(0, ts.sequence_length - 1, num_positions),
               max_time=max_time)
-ax = fig.axes[0]
 ax.add_collection(patches)
 fig.savefig(outbase + ".lineages.png")
 plt.close(fig)
