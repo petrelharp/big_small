@@ -2,7 +2,12 @@ function (*) diff(numeric x) {
     return x[1:(length(x) - 1)] - x[0:(length(x) - 2)];
 }
 
+function (*) mod(numeric x, numeric n) {
+    return (x % n) + n * ifelse(x < 0, 1, 0);
+}
+
 function (*) InitLandscape(numeric n) {
+    // this is not periodic (how to do that?)
     x = rep(0.0, n);
     x[0] = asFloat(runif(1) < PBAD / (PBAD + PGOOD));
     for (k in 1:(n-1)) {
@@ -13,15 +18,18 @@ function (*) InitLandscape(numeric n) {
 }
 
 function (*) UpdateLandscape(numeric x) {
+    // this *is* periodic!
     n = length(x);
     for (_ in 1:NSTEPS) {
-        lefts = which(diff(c(0, x)) > 0);
-        rights = which(diff(c(x, 0)) < 0);
+        lefts = which(diff(c(x[n-1], x)) > 0);
+        rights = which(diff(c(x, x[0])) < 0);
         np = size(lefts);
         if (np > 0) {
-            gaps = c(lefts, n) - c(-1, rights) - 1;
+            if (lefts[0] > rights[0])
+                rights = c(rights[1+seqLen(np-1)], n + rights[0]);
+            gaps = c(lefts[1+seqLen(np-1)], n + lefts[0]) - rights - 1;
             ones = (lefts == rights);
-            for (k in seq(0, np-1)) {
+            for (k in seqLen(np)) {
                 // die?
                 if (ones[k] & (runif(1) < PATCHDEATH/NSTEPS)) {
                     x[lefts[k]] = 0;
@@ -29,7 +37,7 @@ function (*) UpdateLandscape(numeric x) {
                     if (runif(1) < JITTER/NSTEPS) { // left boundary
                         if (runif(1) < GROW_PROB) { // grow?
                             if (gaps[k] > 1)
-                                x[lefts[k] - 1] = 1.0;
+                                x[mod(lefts[k] - 1, n)] = 1.0;
                         } else { // shrink?
                             if (!ones[k])
                                 x[lefts[k]] = 0.0;
@@ -37,28 +45,38 @@ function (*) UpdateLandscape(numeric x) {
                     }
                     if (runif(1) < JITTER/NSTEPS) { // right boundary
                         if (runif(1) < GROW_PROB) { // grow
-                            if (gaps[k+1] > 1)
-                                x[rights[k] + 1] = 1.0;
+                            if (gaps[mod(k + 1, np)] > 1)
+                                x[mod(rights[k] + 1, n)] = 1.0;
                         } else { // shrink?
                             if (!ones[k])
-                                x[rights[k]] = 0.0;
+                                x[mod(rights[k], n)] = 0.0;
                         }
                     }
                 }
             }
         }
         // births
-        lefts = which(diff(c(0, x)) > 0);
-        rights = which(diff(c(x, 0)) < 0);
+        lefts = which(diff(c(x[n-1], x)) > 0);
+        rights = which(diff(c(x, x[0])) < 0);
         np = size(lefts);
-        gaps = c(lefts, n) - c(-1, rights) - 1;
-        for (k in seq(0, length(gaps) - 1)) {
+        if (np > 0) {
+          if (lefts[0] > rights[0])
+            rights = c(rights[1+seqLen(np-1)], n + rights[0]);
+          gaps = c(lefts[1+seqLen(np-1)], n + lefts[0]) - rights - 1;
+        } else {
+          lefts = n+1;
+          rights = -2;
+          gaps = n + 2;
+          np = 1;
+        }
+        // note: sum(gaps) + sum(rights - lefts) + np == W
+        for (k in seqLen(np)) {
             if (gaps[k] > 2) {
                 nb = rpois(1, (PATCHBIRTH/NSTEPS) * (gaps[k] - 2));
-                start = c(-1, rights)[k] + 2;
-                end = c(lefts, n)[k] - 2;
+                start = rights[k] + 2;
+                end = lefts[mod(k+1, np)] - 2;
                 locs = sample(start:end, nb);
-                x[locs] = 1.0;
+                x[mod(locs, n)] = 1.0;
             }
         }
     }
