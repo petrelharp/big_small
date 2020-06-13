@@ -33,7 +33,7 @@ for (vf in basename(varfiles)) {
 
 pdf(file='speeds.pdf', width=8, height=4, pointsize=10)
     layout(t(1:2))
-    for (this_sd in unique(vartables$SD)) {
+    for (this_sd in sort(unique(vartables$SD))) {
         plot(mean ~ GAMMAB, data=vartables, subset=(SD == this_sd), type='b',
              main=sprintf("SD=%0.1f", this_sd),
              xlab=expression(gamma[b]),

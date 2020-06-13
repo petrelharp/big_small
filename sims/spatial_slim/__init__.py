@@ -97,17 +97,23 @@ def get_lineages(ts, children, positions, max_time):
     return paths
 
 
-def individual_node_matrix(ts):
+def individual_node_matrix(ts, transpose=False):
     """
     Constructs the (num individuals x num nodes) matrix whose (i, j)th entry
-    is True if node j is a chromosome of individual i.
+    is True if node j is a chromosome of individual i.  Or, the transpose of this.
     """
     nodes = ts.tables.nodes
     has_individual = np.where(nodes.individual >= 0)[0]
-    N = scipy.sparse.coo_matrix(
-            (np.repeat(True, len(has_individual)),
-             (nodes.individual[has_individual], has_individual)),
-            shape = (ts.num_individuals, ts.num_nodes), dtype='bool')
+    if transpose:
+        N = scipy.sparse.coo_matrix(
+                (np.repeat(True, len(has_individual)),
+                 (has_individual, nodes.individual[has_individual])),
+                shape = (ts.num_nodes, ts.num_individuals), dtype='bool')
+    else:
+        N = scipy.sparse.coo_matrix(
+                (np.repeat(True, len(has_individual)),
+                 (nodes.individual[has_individual], has_individual)),
+                shape = (ts.num_individuals, ts.num_nodes), dtype='bool')
     return N.tocsc()
 
 
@@ -131,7 +137,7 @@ def node_relatedness_matrix(ts, left=0.0, right=None):
 def individual_relatedness_matrix(ts, left=0.0, right=None):
     """
     Constructs the sparse matrix whose [i,j]th entry gives the amount that
-    individual j inherited *directly* from node i, i.e., the sum of the length
+    individual j inherited *directly* from individual i, i.e., the sum of the length
     of all edges that have i as a parent and j as a child.
     """
     R = node_relatedness_matrix(ts, left=left, right=right)

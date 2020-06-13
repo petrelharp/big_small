@@ -16,13 +16,6 @@ if len(sys.argv) < 2:
 
 tsfiles = sys.argv[1:]
 
-def quantile(x, q):
-    if hasattr(np, 'quantile'):
-        return list(np.quantile(x, q))
-    else:
-        x.sort()
-        return [x[int(len(x) * qq)] for qq in q]
-
 for treefile in tsfiles:
     outbase = ".".join(treefile.split(".")[:-1])
     outfile = outbase + ".variances.txt"
@@ -31,21 +24,32 @@ for treefile in tsfiles:
 
     today = ts.individuals_alive_at(0)
     has_parents = ts.has_individual_parents()
+    has_parents_nodes = np.append(has_parents, False)[ts.tables.nodes.individual]
 
-    R = sps.individual_relatedness_matrix(ts)
-    R /= 2 * ts.sequence_length
-    locs = ts.individual_locations
+    # inR[i,j] will give the proportion of the genome
+    # that node j inherits from individual i -- so,
+    # all of the nonzero entries of inR[:,has_parents_nodes] should be 1.0,
+    # and each column should have just one nonzero
+    R = sps.node_relatedness_matrix(ts)
+    R /= ts.sequence_length
+    N = sps.individual_node_matrix(ts)
+    inR = N @ R
+    assert(np.allclose(np.sum(inR[:,has_parents_nodes], axis=0), 1.0))
+    _, j, v = scipy.sparse.find(inR)
+    assert(np.allclose(v[has_parents_nodes[j]], 1.0))
+    ind_locs = ts.individual_locations
+    node_locs = ts.individual_locations[ts.tables.nodes.individual]
     times = ts.individual_times
-    dt = (times @ R - times)
-    dx = (locs[:,0] @ R - locs[:,0])
-    dx2 = ((locs[:,0] ** 2) @ R - (locs[:,0] ** 2))
-    var = (dx2 - dx**2) / dt
-    assert(np.min(dt[has_parents]) > 0)
+    # TODO: need to compute var/dt separately for each parent-child link
+    dt = (times @ inR - ts.tables.nodes.time)
+    dx2 = (ind_locs[:,0] @ inR - node_locs[:,0]) ** 2
+    vardt = dx2 / dt
+    assert(np.min(dt[has_parents_nodes]) > 0)
 
     with open(outfile, 'w') as f:
         print("\t".join(["mean", "stdev", "2.5%", "25%", "50%", "75%", "97.5%"]), file=f)
         print("\t".join(map(str,
-            [np.mean(var[has_parents]), np.std(var[has_parents])]
-            + quantile(var[has_parents], [.025, .25, .5, .75, .975]))), file=f)
+            [np.mean(vardt[has_parents_nodes]), np.std(vardt[has_parents_nodes])]
+            + list(np.quantile(vardt[has_parents_nodes], [.025, .25, .5, .75, .975])))), file=f)
 
 print("Done.\n")
