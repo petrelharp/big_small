@@ -3,6 +3,7 @@
 import sys
 import numpy as np
 import pyslim, tskit
+import scipy
 import spatial_slim as sps
 
 usage = """
