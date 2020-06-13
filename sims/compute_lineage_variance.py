@@ -71,8 +71,7 @@ for treefile in tsfiles:
     ax.set_ylabel("|dx|")
     ax.contour(X, Y, Z,
                colors='r',
-               alpha=0.95,
-               zorder=-1)
+               alpha=0.95)
 
     fig.savefig(plotfile)
     plt.close(fig)
