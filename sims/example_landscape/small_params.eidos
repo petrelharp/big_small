@@ -1,11 +1,11 @@
-defineConstant("OUTPATH", "./example");
+defineConstant("OUTPATH", "./small_example");
 defineConstant("PATCHPATH", OUTPATH + ".landscape");
 
-defineConstant("NUMGENS", 15000);
-defineConstant("BURNIN", 1000);      
-defineConstant("W", 1000.0);  // dimension of the simulated area
-defineConstant("PGOOD", 0.1); // mean length of a patch is 1/PGOOD
-defineConstant("PBAD", 0.01); // mean length of inter-patch is 1/PBAD
+defineConstant("NUMGENS", 100);
+defineConstant("BURNIN", 1);      
+defineConstant("W", 100.0);  // dimension of the simulated area
+defineConstant("PGOOD", 0.3); // mean length of a patch is 1/PGOOD
+defineConstant("PBAD", 0.1); // mean length of inter-patch is 1/PBAD
 defineConstant("GAMMA_B", 0.2); // relative rate of births/deaths
 defineConstant("GAMMA_M", 0.1); // relative rate of patch "jitter"
 defineConstant("PATCHBIRTH", GAMMA_B * PBAD * PGOOD / (1 - PBAD));
@@ -14,7 +14,7 @@ defineConstant("JITTER", GAMMA_M * (2 - PGOOD - PBAD));
 defineConstant("GROW_PROB", (1 - PGOOD) / (2 - PGOOD - PBAD));
 defineConstant("BAD_F", 0.25); // relative fecundity out of patches
 defineConstant("GOOD_F", 5.0); // relative fecundity in patches
-defineConstant("NSTEPS", 100); // number of sub-steps to make landscape continuous-time-like
+defineConstant("NSTEPS", 10); // number of sub-steps to make landscape continuous-time-like
 
 defineConstant("NGRID", asInteger(W));
 defineConstant("GRID", seq(0, W, length=NGRID));

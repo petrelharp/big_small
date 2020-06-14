@@ -74,7 +74,7 @@ function (*) UpdateLandscape(numeric x) {
             if (gaps[k] > 2) {
                 nb = rpois(1, (PATCHBIRTH/NSTEPS) * (gaps[k] - 2));
                 start = rights[k] + 2;
-                end = lefts[mod(k+1, np)] - 2;
+                end = start + gaps[k] - 2;
                 locs = sample(start:end, nb);
                 x[mod(locs, n)] = 1.0;
             }

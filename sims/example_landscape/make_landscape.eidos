@@ -1,5 +1,8 @@
 source("../patch_functions.eidos");
 
+if (fileExists(PATCHPATH))
+  deleteFile(PATCHPATH);
+
 landscape = InitLandscape(NGRID);
 for (gen in 1:(BURNIN+NUMGENS)) {
   landscape = UpdateLandscape(landscape);
