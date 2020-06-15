@@ -26,14 +26,14 @@ for patchfile in sys.argv[1:]:
     patchdata = np.loadtxt(patchfile)
     patchtimes = patchdata[:, 0]
     patchvals = patchdata[:, 1:]
-    patches = sps.patch_polygons(patchtimes, patchvals)
 
     fig, ax = plt.subplots(figsize=(9, 9))
     ax.set_xlabel("geographic position")
     ax.set_ylabel("time ago")
     ax.set_title(patchfile)
-    ax.set_xlim(0, patchvals.shape[1])
-    ax.set_ylim(0, np.max(patchtimes))
+    ax.set_xlim(-1, patchvals.shape[1] + 1)
+    ax.set_ylim(0, np.max(patchtimes) - np.min(patchtimes))
+    patches = sps.patch_polygons(patchtimes, patchvals)
     ax.add_collection(patches)
     fig.savefig(outfile)
     plt.close(fig)

@@ -1,5 +1,8 @@
 source("../patch_functions.eidos");
 
+if (exists("seed"))
+    setSeed(seed);
+
 if (fileExists(PATCHPATH))
   deleteFile(PATCHPATH);
 

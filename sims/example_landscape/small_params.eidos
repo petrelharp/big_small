@@ -1,5 +1,6 @@
 defineConstant("OUTPATH", "./small_example");
 defineConstant("PATCHPATH", OUTPATH + ".landscape");
+defineConstant("seed", 125);
 
 defineConstant("NUMGENS", 100);
 defineConstant("BURNIN", 1);      
