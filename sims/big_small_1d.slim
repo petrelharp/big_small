@@ -14,9 +14,9 @@ initialize() {
     if (!exists("W"))
       defineConstant("W", 1000.0);  // dimension of the simulated area
     if (!exists("K"))
-      defineConstant("K", 5);  // carrying-capacity per unit area (roughly)
+      defineConstant("K", 2);  // carrying-capacity per unit area (roughly)
     if (!exists("SD"))
-      defineConstant("SD", 1.0);  // sigma_D, the dispersal distance
+      defineConstant("SD", 10.0);  // sigma_D, the dispersal distance
     defineConstant("SI", 1.0);  // sigma_I, the spatial interaction distance
     defineConstant("SM", SI);  // sigma_M, the mate choice distance
     defineConstant("L", 4);    // mean lifetime at stationarity
@@ -29,14 +29,14 @@ initialize() {
     if (!exists("PBAD"))
       defineConstant("PBAD", 0.01); // mean length of inter-patch is 1/PBAD
     if (!exists("GAMMA_B"))
-      defineConstant("GAMMA_B", 0.2); // relative rate of births/deaths
+      defineConstant("GAMMA_B", 4.0); // relative rate of births/deaths
     if (!exists("GAMMA_M"))
-      defineConstant("GAMMA_M", 0.2); // relative rate of patch "jitter"
+      defineConstant("GAMMA_M", 1.0); // relative rate of patch "jitter"
     defineConstant("PATCHBIRTH", GAMMA_B * PBAD * PGOOD / (1 - PBAD));
     defineConstant("PATCHDEATH", GAMMA_B * (1 - PBAD));
     defineConstant("JITTER", GAMMA_M * (2 - PGOOD - PBAD));
     defineConstant("GROW_PROB", (1 - PGOOD) / (2 - PGOOD - PBAD));
-    defineConstant("BAD_F", 0.05); // relative fecundity out of patches
+    defineConstant("BAD_F", 0.1); // relative fecundity out of patches
     defineConstant("GOOD_F", 10.0); // relative fecundity in patches
     defineConstant("NSTEPS", 100); // number of sub-steps to make landscape continuous-time-like
     
