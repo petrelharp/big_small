@@ -14,9 +14,9 @@ initialize() {
     if (!exists("W"))
       defineConstant("W", 1000.0);  // dimension of the simulated area
     if (!exists("K"))
-      defineConstant("K", 2);  // carrying-capacity per unit area (roughly)
+      defineConstant("K", 4);  // carrying-capacity per unit area (roughly)
     if (!exists("SD"))
-      defineConstant("SD", 10.0);  // sigma_D, the dispersal distance
+      defineConstant("SD", 6.0);  // sigma_D, the dispersal distance
     defineConstant("SI", 1.0);  // sigma_I, the spatial interaction distance
     defineConstant("SM", SI);  // sigma_M, the mate choice distance
     defineConstant("L", 4);    // mean lifetime at stationarity
@@ -27,7 +27,7 @@ initialize() {
     if (!exists("PGOOD"))
       defineConstant("PGOOD", 0.1); // mean length of a patch is 1/PGOOD
     if (!exists("PBAD"))
-      defineConstant("PBAD", 0.01); // mean length of inter-patch is 1/PBAD
+      defineConstant("PBAD", 0.02); // mean length of inter-patch is 1/PBAD
     if (!exists("GAMMA_B"))
       defineConstant("GAMMA_B", 4.0); // relative rate of births/deaths
     if (!exists("GAMMA_M"))
