@@ -13,8 +13,29 @@ def get_patches(times, vals, periodic=True):
         rights = np.where(np.diff(np.concatenate([x, [0]])) < 0)[0]
         if periodic and lefts[0] == 0 and rights[-1] == n-1:
             lefts = lefts[1:]
-            rights = np.append(rights[1:(n-1)], rights[0])
+            rights = np.append(rights[1:-1], rights[0])
+        assert(len(lefts) == len(rights))
         yield (t, lefts, rights)
+
+
+def patch_lengths(times, vals, breaks=None):
+    """
+    Returns the array of patch lengths.
+    """
+    n = vals.shape[1]
+    if breaks is None:
+        breaks = [min(times), max(times) + 1]
+    counts = np.zeros((len(breaks) - 1, n))
+    lengths = []
+    k = 0
+    for t, lefts, rights in get_patches(times, vals):
+        if t >= breaks[k+1]:
+            counts[k] += np.bincount(lengths, minlength=n)
+            lengths = []
+            k += 1
+        lengths.extend(1 + (rights - lefts) % n)
+    counts[k] += np.bincount(lengths, minlength=n)
+    return counts
 
 
 def match_patches(patches, t, lefts, rights, tolerance):

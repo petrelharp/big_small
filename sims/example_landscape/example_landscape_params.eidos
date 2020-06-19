@@ -1,8 +1,8 @@
 defineConstant("OUTPATH", "./example");
 defineConstant("PATCHPATH", OUTPATH + ".landscape");
 
-defineConstant("NUMGENS", 15000);
-defineConstant("BURNIN", 1000);      
+defineConstant("NUMGENS", 1500);
+defineConstant("BURNIN", 100);      
 defineConstant("W", 1000.0);  // dimension of the simulated area
 defineConstant("PGOOD", 0.1); // mean length of a patch is 1/PGOOD
 defineConstant("PBAD", 0.01); // mean length of inter-patch is 1/PBAD
