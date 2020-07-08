@@ -92,18 +92,22 @@ reproduction() {
     init_patches = InitLandscape(NGRID);
     p1.defineSpatialMap("patches", "x", NGRID, init_patches, interpolate=F, valueRange=c(0,1), colors=c("#000000", "#FFFFFF"));
 
-    if (exists("BURNIN"))
-      sim.rescheduleScriptBlock(s2, generations=BURNIN + 1);
-    if (exists("NUMGENS"))
-        sim.rescheduleScriptBlock(s99, generations=BURNIN + NUMGENS);
+    sim.rescheduleScriptBlock(s2, generations=BURNIN);
+    sim.rescheduleScriptBlock(s3, start=BURNIN + 1, end=BURNIN + NUMGENS);
+    sim.rescheduleScriptBlock(s99, generations=BURNIN + NUMGENS);
     
     // header info
     cat("gen" + " " + "stage" + " " + "age" + " " + "pop_size");
     catn(" " + "neighbor" + " " + "harm_neigh" + " " + "num_off" + " " + "time");
 }
 
+
 s2 2 late() {
 	sim.treeSeqSimplify();
+}
+
+s3 1: late() {
+    sim.treeSeqRememberIndividuals(p1.individuals);
 }
 
 early() {
@@ -156,6 +160,6 @@ early() {
 
 s99 100 late() {
     catn("done!");
-    sim.treeSeqOutput(OUTPATH, simplify=F);
+    sim.treeSeqOutput(OUTPATH);
     sim.simulationFinished();
 }

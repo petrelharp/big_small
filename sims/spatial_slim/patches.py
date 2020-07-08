@@ -11,7 +11,7 @@ def get_patches(times, vals, periodic=True):
     for t, x in zip(times, vals):
         lefts = np.where(np.diff(np.concatenate([[0], x])) > 0)[0]
         rights = np.where(np.diff(np.concatenate([x, [0]])) < 0)[0]
-        if periodic and lefts[0] == 0 and rights[-1] == n-1:
+        if len(lefts) > 0 and periodic and lefts[0] == 0 and rights[-1] == n-1:
             lefts = lefts[1:]
             rights = np.append(rights[1:-1], rights[0])
         assert(len(lefts) == len(rights))
