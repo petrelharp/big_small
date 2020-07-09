@@ -1,104 +1,104 @@
 initialize() {
-    source("patch_functions.eidos");
-    initializeSLiMModelType("nonWF");
-    initializeSLiMOptions(dimensionality="x", periodicity="x");
-    initializeTreeSeq(simplificationInterval=10000000);
-    
-    if (!exists("OUTPATH"))
-      defineConstant("OUTPATH", "./sim");
-    defineConstant("PATCHPATH", OUTPATH + ".landscape");
-    if (fileExists(PATCHPATH))
-      deleteFile(PATCHPATH);
-    if (!exists("NUMGENS"))
-      defineConstant("NUMGENS", 5000);
-    if (!exists("BURNIN"))
-      defineConstant("BURNIN", 1000);      
-    if (!exists("W"))
-      defineConstant("W", 1000.0);  // dimension of the simulated area
-    if (!exists("K"))
-      defineConstant("K", 4);  // carrying-capacity per unit area (roughly)
-    if (!exists("SD"))
-      defineConstant("SD", 6.0);  // sigma_D, the dispersal distance
-    defineConstant("SI", 1.0);  // sigma_I, the spatial interaction distance
-    defineConstant("SM", SI);  // sigma_M, the mate choice distance
-    defineConstant("L", 4);    // mean lifetime at stationarity
-    defineConstant("G", 1e8);  // genome length
-    defineConstant("FECUN", 1/L); // mean fecundity
-    defineConstant("RHO", FECUN/((1+FECUN) * K)); // constant in spatial competition function
-    
-    if (!exists("PGOOD"))
-      defineConstant("PGOOD", 0.1); // mean length of a patch is 1/PGOOD
-    if (!exists("PBAD"))
-      defineConstant("PBAD", 0.02); // mean length of inter-patch is 1/PBAD
-    if (!exists("GAMMA_B"))
-      defineConstant("GAMMA_B", 4.0); // relative rate of births/deaths
-    if (!exists("GAMMA_M"))
-      defineConstant("GAMMA_M", 1.0); // relative rate of patch "jitter"
-    defineConstant("PATCHBIRTH", GAMMA_B * PBAD * PGOOD / (1 - PBAD));
-    defineConstant("PATCHDEATH", GAMMA_B * (1 - PBAD));
-    defineConstant("JITTER", GAMMA_M * (2 - PGOOD - PBAD));
-    defineConstant("GROW_PROB", (1 - PGOOD) / (2 - PGOOD - PBAD));
-    defineConstant("BAD_F", 0.1); // relative fecundity out of patches
-    defineConstant("GOOD_F", 10.0); // relative fecundity in patches
-    defineConstant("NSTEPS", 100); // number of sub-steps to make landscape continuous-time-like
-    
-    initializeMutationType("m1", 0.5, "g", 0.0, 2);
-    initializeGenomicElementType("g1", m1, 1.0);
-    initializeGenomicElement(g1, 0, G-1);
-    initializeMutationRate(0.0);
-    initializeRecombinationRate(1e-8);
-    
-    // grid to measure things on
-    defineConstant("NGRID", asInteger(W));
-    defineConstant("GRID", seq(0, W, length=NGRID));
-    
-    // spatial competition
-    initializeInteractionType(1, "x", reciprocal=T, maxDistance=SI * 3);
-    i1.setInteractionFunction("n", 1.0/(2*PI*SI^2), SI);
-    
-    // mate choice
-    initializeInteractionType(2, "x", reciprocal=T, maxDistance=SM * 3);
-    i2.setInteractionFunction("n", 1.0/(2*PI*SM^2), SM);
+	source("patch_functions.eidos");
+	initializeSLiMModelType("nonWF");
+	initializeSLiMOptions(dimensionality="x", periodicity="x");
+	initializeTreeSeq(simplificationInterval=10000000);
+	
+	if (!exists("OUTPATH"))
+		defineConstant("OUTPATH", "./sim");
+	defineConstant("PATCHPATH", OUTPATH + ".landscape");
+	if (fileExists(PATCHPATH))
+		deleteFile(PATCHPATH);
+	if (!exists("NUMGENS"))
+		defineConstant("NUMGENS", 5000);
+	if (!exists("BURNIN"))
+		defineConstant("BURNIN", 1000);
+	if (!exists("W"))
+		defineConstant("W", 1000.0);  // dimension of the simulated area
+	if (!exists("K"))
+		defineConstant("K", 3);  // carrying-capacity per unit area (roughly)
+	if (!exists("SD"))
+		defineConstant("SD", 6.0);  // sigma_D, the dispersal distance
+	defineConstant("SI", 1.0);  // sigma_I, the spatial interaction distance
+	defineConstant("SM", SI);  // sigma_M, the mate choice distance
+	defineConstant("L", 4);    // mean lifetime at stationarity
+	defineConstant("G", 1e8);  // genome length
+	defineConstant("FECUN", 1/L); // mean fecundity
+	defineConstant("RHO", FECUN/((1+FECUN) * K)); // constant in spatial competition function
+	
+	if (!exists("PGOOD"))
+		defineConstant("PGOOD", 0.1); // mean length of a patch is 1/PGOOD
+	if (!exists("PBAD"))
+		defineConstant("PBAD", 0.02); // mean length of inter-patch is 1/PBAD
+	if (!exists("GAMMA_B"))
+		defineConstant("GAMMA_B", 4.0); // relative rate of births/deaths
+	if (!exists("GAMMA_M"))
+		defineConstant("GAMMA_M", 1.0); // relative rate of patch "jitter"
+	defineConstant("PATCHBIRTH", GAMMA_B * PBAD * PGOOD / (1 - PBAD));
+	defineConstant("PATCHDEATH", GAMMA_B * (1 - PBAD));
+	defineConstant("JITTER", GAMMA_M * (2 - PGOOD - PBAD));
+	defineConstant("GROW_PROB", (1 - PGOOD) / (2 - PGOOD - PBAD));
+	defineConstant("BAD_F", 1.0); // relative fecundity out of patches: roughly multiplies K
+	defineConstant("GOOD_F", 2.0); // relative fecundity in patches: roughly multiplies K
+	defineConstant("NSTEPS", 100); // number of sub-steps to make landscape continuous-time-like
+	
+	initializeMutationType("m1", 0.5, "g", 0.0, 2);
+	initializeGenomicElementType("g1", m1, 1.0);
+	initializeGenomicElement(g1, 0, G-1);
+	initializeMutationRate(0.0);
+	initializeRecombinationRate(1e-8);
+	
+	// grid to measure things on
+	defineConstant("NGRID", asInteger(W));
+	defineConstant("GRID", seq(0, W, length=NGRID));
+	
+	// spatial competition
+	initializeInteractionType(1, "x", reciprocal=T, maxDistance=SI * 3);
+	i1.setInteractionFunction("n", 1.0/(2*PI*SI^2), SI);
+	
+	// mate choice
+	initializeInteractionType(2, "x", reciprocal=T, maxDistance=SM * 3);
+	i2.setInteractionFunction("n", 1.0/(2*PI*SM^2), SM);
 
 }
 
 reproduction() {
-    // choose our nearest neighbor as a mate, within the max distance
-    mate = i2.drawByStrength(individual, 1);
-    if (mate.size()) {
-        nOff = rpois(1, FECUN * (BAD_F + GOOD_F * p1.spatialMapValue("patches", individual.spatialPosition)));
-        individual.tag = individual.tag + nOff;  // DEBUG
-        for (i in seqLen(nOff)) {
-            pos = p1.pointPeriodic(individual.spatialPosition + rnorm(1, 0.0, SD));
-            offspring = subpop.addCrossed(individual, mate);
-            offspring.setSpatialPosition(pos);
-            offspring.tag = 0; // DEBUG
-        }
-    }
-    return;
+	// choose our nearest neighbor as a mate, within the max distance
+	mate = i2.drawByStrength(individual, 1);
+	if (mate.size() == 0)
+		mate = individual;
+	nOff = rpois(1, FECUN * (BAD_F + GOOD_F * p1.spatialMapValue("patches", individual.spatialPosition)));
+	individual.tag = individual.tag + nOff;  // DEBUG
+	for (i in seqLen(nOff)) {
+		pos = p1.pointPeriodic(individual.spatialPosition + rnorm(1, 0.0, SD));
+		offspring = subpop.addCrossed(individual, mate);
+		offspring.setSpatialPosition(pos);
+		offspring.tag = 0; // DEBUG
+	}
+	return;
 }
 
 1 early() {
-    sim.addSubpop("p1", asInteger(K * W ));
-    p1.setSpatialBounds(c(0, W));
-    // random initial positions
-    for (ind in p1.individuals) {
-        ind.setSpatialPosition(p1.pointUniform());
-        ind.tag = 0; // DEBUG
-    }
-    i1.evaluate();
-    
-    // map set-up
-    init_patches = InitLandscape(NGRID);
-    p1.defineSpatialMap("patches", "x", NGRID, init_patches, interpolate=F, valueRange=c(0,1), colors=c("#000000", "#FFFFFF"));
-
-    sim.rescheduleScriptBlock(s2, generations=BURNIN);
-    sim.rescheduleScriptBlock(s3, start=BURNIN + 1, end=BURNIN + NUMGENS);
-    sim.rescheduleScriptBlock(s99, generations=BURNIN + NUMGENS);
-    
-    // header info
-    cat("gen" + " " + "stage" + " " + "age" + " " + "pop_size");
-    catn(" " + "neighbor" + " " + "harm_neigh" + " " + "num_off" + " " + "time");
+	sim.addSubpop("p1", asInteger(K * W ));
+	p1.setSpatialBounds(c(0, W));
+	// random initial positions
+	for (ind in p1.individuals) {
+		ind.setSpatialPosition(p1.pointUniform());
+		ind.tag = 0; // DEBUG
+	}
+	i1.evaluate();
+	
+	// map set-up
+	init_patches = InitLandscape(NGRID);
+	p1.defineSpatialMap("patches", "x", NGRID, init_patches, interpolate=F, valueRange=c(0,1), colors=c("#000000", "#FFFFFF"));
+	
+	sim.rescheduleScriptBlock(s2, generations=BURNIN);
+	sim.rescheduleScriptBlock(s3, start=BURNIN + 1, end=BURNIN + NUMGENS);
+	sim.rescheduleScriptBlock(s99, generations=BURNIN + NUMGENS);
+	
+	// header info
+	cat("gen" + " " + "stage" + " " + "age" + " " + "pop_size");
+	catn(" " + "neighbor" + " " + "harm_neigh" + " " + "num_off" + " " + "time");
 }
 
 
@@ -107,59 +107,69 @@ s2 2 late() {
 }
 
 s3 1: late() {
-    sim.treeSeqRememberIndividuals(p1.individuals);
+	sim.treeSeqRememberIndividuals(p1.individuals);
 }
 
 early() {
-    i1.evaluate(p1);
-    inds = p1.individuals;
-    competition = i1.totalOfNeighborStrengths(inds);
-    inds.tagF = competition;  // DEBUG
-    inds.fitnessScaling = pmin(0.95, 1/(1 + RHO * competition));
+	i1.evaluate(p1);
+	inds = p1.individuals;
+	if (F) { // density-driven mortality
+		i1.evaluate(p1);
+		competition = i1.totalOfNeighborStrengths(inds);
+	} else { // density-driven establishment only
+		old = inds.age > 0;
+		inds[old].fitnessScaling = 1 - 1 / L;
+		competition = rep(6.0, p1.individualCount);
+		competition[!old] = i1.totalOfNeighborStrengths(inds[!old]);
+	}
+	inds.tagF = competition;  // DEBUG
+	inds.fitnessScaling = pmin(0.95, 1/(1 + RHO * competition));
 }
 
 1: late() {
-    // to be ready for mate choice
-    i2.evaluate(p1);
+	// to be ready for mate choice
+	i2.evaluate(p1);
 }
 
 1: late() {
-    newvals = UpdateLandscape(p1.spatialMapValue("patches", GRID));
-    p1.defineSpatialMap("patches", "x", NGRID, newvals, interpolate=F, valueRange=c(0,1), colors=c("#000000", "#FFFFFF"));
-    writeFile(PATCHPATH, sim.generation + " " + paste(newvals), append=T);
+	newvals = UpdateLandscape(p1.spatialMapValue("patches", GRID));
+	p1.defineSpatialMap("patches", "x", NGRID, newvals, interpolate=F, valueRange=c(0,1), colors=c("#000000", "#FFFFFF"));
+	writeFile(PATCHPATH, sim.generation + " " + paste(newvals), append=T);
 }
 
 2: early() {
-    if ((sim.generation % 20) == 0) {
-        cat(sim.generation + " " + "early" + " " + mean(p1.individuals.age) + " " + p1.individualCount);
-        cat(" " + mean(p1.individuals.tagF) + " " + 1/mean(1/p1.individuals.tagF) + " " + mean(p1.individuals.tag));
-        catn(" " + clock());
-    }
+	if ((sim.generation % 20) == 0) {
+		cat(sim.generation + " " + "early" + " " + mean(p1.individuals.age) + " " + p1.individualCount);
+		cat(" " + mean(p1.individuals.tagF) + " " + 1/mean(1/p1.individuals.tagF) + " " + mean(p1.individuals.tag));
+		catn(" " + clock());
+	}
 }
 
 2: late() {
-    if ((sim.generation % 20) == 0) {
-        cat(sim.generation + " " + "late " + " " + mean(p1.individuals.age) + " " + p1.individualCount);
-        cat(" " + mean(p1.individuals.tagF) + " " + 1/mean(1/p1.individuals.tagF) + " " + mean(p1.individuals.tag));
-        catn(" " + clock());
-    }
-    
-    // DEBUG: GUI COLORS
-    // green = many neighbors, few offspring so far
-    // red = many offspring so far, few neighbors
-    // yellow = many offspring so far, many neighbors
-    if (exists("slimgui")) {
-      max_n = max(1, max(p1.individuals.tag));
-      max_f = max(0.01, max(p1.individuals.tagF));
-      max_a = max(p1.individuals.age);
-      for (ind in p1.individuals) {
-          ind.color = rgb2color(c(ind.tag/max_n, ind.tagF/max_f, ind.age/max_a));
-      }
-  }
+	if ((sim.generation % 20) == 0) {
+		if (p1.individualCount == 0)
+			sim.simulationFinished();
+		cat(sim.generation + " " + "late " + " " + mean(p1.individuals.age) + " " + p1.individualCount);
+		cat(" " + mean(p1.individuals.tagF) + " " + 1/mean(1/p1.individuals.tagF) + " " + mean(p1.individuals.tag));
+		catn(" " + clock());
+	}
+	
+	// DEBUG: GUI COLORS
+	// green = many neighbors, few offspring so far
+	// red = many offspring so far, few neighbors
+	// yellow = many offspring so far, many neighbors
+	if (exists("slimgui") & p1.individualCount > 0) {
+		max_n = max(1, max(p1.individuals.tag));
+		max_f = max(0.01, max(p1.individuals.tagF));
+		max_a = max(p1.individuals.age);
+		for (ind in p1.individuals) {
+			ind.color = rgb2color(c(ind.tag/max_n, ind.tagF/max_f, ind.age/max_a));
+		}
+	}
 }
 
 s99 100 late() {
-    catn("done!");
-    sim.treeSeqOutput(OUTPATH);
-    sim.simulationFinished();
+	catn("done!");
+	sim.treeSeqOutput(OUTPATH);
+	sim.simulationFinished();
 }
