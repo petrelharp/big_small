@@ -94,7 +94,8 @@ reproduction() {
 	
 	sim.rescheduleScriptBlock(s2, generations=BURNIN);
 	sim.rescheduleScriptBlock(s3, start=BURNIN + 1, end=BURNIN + NUMGENS);
-	sim.rescheduleScriptBlock(s99, generations=BURNIN + NUMGENS);
+	savegens = unique(c((1 + seqLen(asInteger(NUMGENS/1000)-1))*1000, NUMGENS)) + BURNIN;
+	sim.rescheduleScriptBlock(s99, generations=savegens);
 	
 	// header info
 	cat("gen" + " " + "stage" + " " + "age" + " " + "pop_size");
@@ -147,8 +148,6 @@ early() {
 
 2: late() {
 	if ((sim.generation % 20) == 0) {
-		if (p1.individualCount == 0)
-			sim.simulationFinished();
 		cat(sim.generation + " " + "late " + " " + mean(p1.individuals.age) + " " + p1.individualCount);
 		cat(" " + mean(p1.individuals.tagF) + " " + 1/mean(1/p1.individuals.tagF) + " " + mean(p1.individuals.tag));
 		catn(" " + clock());
@@ -171,5 +170,4 @@ early() {
 s99 100 late() {
 	catn("done!");
 	sim.treeSeqOutput(OUTPATH);
-	sim.simulationFinished();
 }
