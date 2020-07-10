@@ -16,7 +16,7 @@ the first column giving the time step.
 Usage:
     {} [file.landscape [file.landscape]]
 
-Also plots statistics of 
+Also plots statistics of patch length distributions.
 """.format(sys.argv[0])
 
 if len(sys.argv) < 2:

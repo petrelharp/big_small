@@ -94,7 +94,7 @@ reproduction() {
 	
 	sim.rescheduleScriptBlock(s2, generations=BURNIN);
 	sim.rescheduleScriptBlock(s3, start=BURNIN + 1, end=BURNIN + NUMGENS);
-	savegens = unique(c((1 + seqLen(asInteger(NUMGENS/1000)-1))*1000, NUMGENS)) + BURNIN;
+	savegens = unique(c((1 + seqLen(max(0,asInteger(NUMGENS/1000)-1)))*1000, NUMGENS)) + BURNIN;
 	sim.rescheduleScriptBlock(s99, generations=savegens);
 	
 	// header info

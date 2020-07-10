@@ -42,7 +42,21 @@ if 'seed' not in kwargs:
 kwargs['seed'] = int(kwargs['seed'])
 np.random.seed(kwargs['seed'])
 
-def plot_lineages(ts, ax, children, positions, max_time):
+
+def break_path(path, max_jump=50):
+    """
+    Split up the path any time it jumps by more than max_jump
+    (as it would if it went around the end of a periodic region).
+    """
+    diffs = np.diff(path[:, 0])
+    breaks = [1] + list(np.where(np.abs(diffs) > max_jump)[0]) + [path.shape[1]]
+    for j in range(len(breaks) - 1):
+        if breaks[j+1] > breaks[j] + 1:
+            print(path[(breaks[j]+1):(breaks[j+1]), :])
+            yield path[(breaks[j]+1):(breaks[j+1]), :]
+
+
+def plot_lineages(ts, ax, children, positions, max_time, periodic=True):
     """
     A plot of the lineages ancestral to the given children
     at the given positions.
@@ -61,8 +75,10 @@ def plot_lineages(ts, ax, children, positions, max_time):
     paths = []
     pathcolors = []
     for u, p in path_dict:
-        paths.append(path_dict[(u, p)])
-        pathcolors.append(treecolors[p])
+        this_paths = path_dict[(u, p)]
+        for this_path in break_path(path_dict[(u, p)], max_jump = 50 + 1e6 * (1-periodic)):
+            paths.append(this_path)
+            pathcolors.append(treecolors[p])
     lc = cs.LineCollection(paths, linewidths=0.5, colors=pathcolors)
     ax.add_collection(lc)
 
