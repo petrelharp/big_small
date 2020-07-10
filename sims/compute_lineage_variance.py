@@ -27,6 +27,10 @@ for treefile in tsfiles:
     plotfile = outbase + ".variances.png"
     print(f"Writing variances in {treefile} to {outfile} and plotting to {plotfile}")
     ts = pyslim.load(treefile)
+    # get the width of the region
+    patchfile = treefile + ".landscape"
+    patchrows = np.loadtxt(patchfile, max_rows=2)
+    W = patchrows.shape[1]
 
     today = ts.individuals_alive_at(0)
     has_parents = ts.has_individual_parents()
@@ -48,8 +52,11 @@ for treefile in tsfiles:
     times = ts.individual_times
     # TODO: need to compute var/dt separately for each parent-child link
     dt = (times @ inR - ts.tables.nodes.time)
-    dx2 = (ind_locs[:,0] @ inR - node_locs[:,0]) ** 2
-    vardt = dx2 / dt
+    dx = (ind_locs[:,0] @ inR - node_locs[:,0])
+    # for periodic boundaries
+    dx[dx > W / 2] -= W
+    dx[dx < - W / 2] += W
+    vardt = dx ** 2 / dt
     assert(np.min(dt[has_parents_nodes]) > 0)
 
     with open(outfile, 'w') as f:
@@ -59,14 +66,14 @@ for treefile in tsfiles:
             + list(np.quantile(vardt[has_parents_nodes], [.025, .25, .5, .75, .975])))), file=f)
 
 
-    kde = scipy.stats.gaussian_kde(np.row_stack([dt[has_parents_nodes], np.sqrt(dx2[has_parents_nodes])]))
+    kde = scipy.stats.gaussian_kde(np.row_stack([dt[has_parents_nodes], np.abs(dx[has_parents_nodes])]))
     X, Y = np.meshgrid(
             np.linspace(0.0, np.max(dt[has_parents_nodes]), 51),
-            np.linspace(0.0, np.max(np.sqrt(dx2[has_parents_nodes])), 51))
+            np.linspace(0.0, np.max(np.abs(dx[has_parents_nodes])), 51))
     Z = kde([X.flatten(), Y.flatten()])
     Z.shape = X.shape
     fig, ax = plt.subplots(figsize=(9, 9))
-    ax.scatter(dt[has_parents_nodes], np.sqrt(dx2[has_parents_nodes]), s=5)
+    ax.scatter(dt[has_parents_nodes], np.abs(dx[has_parents_nodes]), s=5)
     ax.set_xlabel("dt")
     ax.set_ylabel("|dx|")
     ax.contour(X, Y, Z,
