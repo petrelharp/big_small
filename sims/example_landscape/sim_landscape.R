@@ -1,3 +1,6 @@
+# R version of the eidos code
+# QUITE POSSIBLY NOT UP TO DATE
+
 PBAD <- 0.01  # = p
 PGOOD <- 0.1  # = q
 GAMMA_B <- 0.1

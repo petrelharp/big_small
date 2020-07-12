@@ -3,84 +3,95 @@ function (*) diff(numeric x) {
 }
 
 function (*) mod(numeric x, numeric n) {
-    return (x % n) + n * ifelse(x < 0, 1, 0);
+    return (x % n) + n * ifelse(x < 0 & n > 1, 1, 0);
 }
 
 function (*) InitLandscape(numeric n) {
-    // this is not periodic (how to do that?)
+    // stationary distribution is a sample from the Markov chain
+    // with transition probabilities
+    //   0 -> 1 = PBAD ( = p in the theory )
+    //   1 -> 0 = PGOOD ( = q in the theory )
+    // note this is not periodic
     x = rep(0.0, n);
-    x[0] = asFloat(runif(1) < PBAD / (PBAD + PGOOD));
+    u = runif(n);
+    x[0] = asFloat(u[0] < PBAD / (PBAD + PGOOD));
     for (k in 1:(n-1)) {
         p = (x[k-1] == 0) ? PBAD else 1 - PGOOD;
-        x[k] = asFloat(runif(1) < p);
+        x[k] = asFloat(u[k] < p);
     }
     return x;
 }
+
+/* Rates:
+ * 000->010: PATCHBIRTH
+ * 010->000: PATCHDEATH
+ * 100->110: GAMMA_M * (1 - PGOOD)
+ * 110->100: GAMMA_M * (1 - PBAD)
+ */
 
 function (*) UpdateLandscape(numeric x) {
     // this *is* periodic!
+    PATCHBIRTH = GAMMA_B * PBAD * PGOOD / (1 - PBAD);
+    PATCHDEATH = GAMMA_B * (1 - PBAD);
+    GROWRATE = GAMMA_M * (1 - PBAD);
+    SHRINKRATE = GAMMA_M * (1 - PGOOD);
+    debug = F;
     n = length(x);
-    for (_ in 1:NSTEPS) {
+    t = 0;
+    while (T) {
         lefts = which(diff(c(x[n-1], x)) > 0);
         rights = which(diff(c(x, x[0])) < 0);
-        np = size(lefts);
-        if (np > 0) {
-            if (lefts[0] > rights[0])
-                rights = c(rights[1+seqLen(np-1)], n + rights[0]);
-            gaps = c(lefts[1+seqLen(np-1)], n + lefts[0]) - rights - 1;
-            ones = (lefts == rights);
-            for (k in seqLen(np)) {
-                // die?
-                if (ones[k] & (runif(1) < PATCHDEATH/NSTEPS)) {
-                    x[lefts[k]] = 0;
-                } else { // jitter?
-                    if (runif(1) < JITTER/NSTEPS) { // left boundary
-                        if (runif(1) < GROW_PROB) { // grow?
-                            if (gaps[k] > 1)
-                                x[mod(lefts[k] - 1, n)] = 1.0;
-                        } else { // shrink?
-                            if (!ones[k])
-                                x[lefts[k]] = 0.0;
-                        }
-                    }
-                    if (runif(1) < JITTER/NSTEPS) { // right boundary
-                        if (runif(1) < GROW_PROB) { // grow
-                            if (gaps[mod(k + 1, np)] > 1)
-                                x[mod(rights[k] + 1, n)] = 1.0;
-                        } else { // shrink?
-                            if (!ones[k])
-                                x[mod(rights[k], n)] = 0.0;
-                        }
-                    }
-                }
-            }
+        np = length(lefts);
+        ones = (lefts == rights);
+        if (debug) {
+          if (length(rights) != np) { stop("lefts != rights"); }
+          if (any(x[lefts] != 1)) { stop("lefts wrong"); }
+          if (any(x[mod(lefts-1,n)] != 0)) { stop("lefts wrong!"); }
+          if (any(x[rights] != 1)) { stop("rights wrong"); }
+          if (any(x[mod(rights+1, n)] != 0)) { stop("rights wrong!"); }
         }
-        // births
-        lefts = which(diff(c(x[n-1], x)) > 0);
-        rights = which(diff(c(x, x[0])) < 0);
-        np = size(lefts);
-        if (np > 0) {
-          if (lefts[0] > rights[0])
-            rights = c(rights[1+seqLen(np-1)], n + rights[0]);
-          gaps = c(lefts[1+seqLen(np-1)], n + lefts[0]) - rights - 1;
+        p = rep(0.0, n);
+        p[x == 0] = PATCHBIRTH;
+        p[lefts] = GROWRATE;
+        p[rights] = GROWRATE;
+        p[mod(lefts - 1, n)] = SHRINKRATE;
+        p[mod(rights + 1, n)] = SHRINKRATE;
+        // except length-1 gaps cannot move
+        g = mod(lefts - 2, n);
+        p[mod(g[x[g] == 1] + 1, n)] = 0;
+        p[lefts[ones]] = PATCHDEATH;
+        total_rate = sum(p);
+        if (debug) {
+          catn("..........>");
+          a = rep(".", n);
+          a[x == 0] = "b";
+          a[lefts] = "l";
+          a[rights] = "r";
+          a[mod(lefts - 1, n)] = "L";
+          a[mod(rights + 1, n)] = "R";
+          a[mod(g[x[g] == 1] + 1, n)] = ".";
+          a[lefts[ones]] = "d";
+          catn(x);
+          catn(a);
+          catn(p);
+        }
+        t = t + rexp(1) / total_rate;
+        if (t > 1) {
+            break;
+        }
+        p = p / total_rate;
+        u = runif(1);
+        k = 0;
+        while (u > 0) {
+            u = u - p[k];
+            k = k + 1;
+        }
+        k = k - 1;
+        if (x[k] == 1) {
+            x[k] = 0;
         } else {
-          lefts = n+1;
-          rights = -2;
-          gaps = n + 2;
-          np = 1;
-        }
-        // note: sum(gaps) + sum(rights - lefts) + np == W
-        for (k in seqLen(np)) {
-            if (gaps[k] > 2) {
-                nb = rpois(1, (PATCHBIRTH/NSTEPS) * (gaps[k] - 2));
-                start = rights[k] + 2;
-                end = start + gaps[k] - 2;
-                locs = sample(start:end, nb);
-                x[mod(locs, n)] = 1.0;
-            }
+            x[k] = 1;
         }
     }
     return x;
 }
-
-

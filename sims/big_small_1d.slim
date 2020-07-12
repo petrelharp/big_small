@@ -34,13 +34,8 @@ initialize() {
 		defineConstant("GAMMA_B", 4.0); // relative rate of births/deaths
 	if (!exists("GAMMA_M"))
 		defineConstant("GAMMA_M", 1.0); // relative rate of patch "jitter"
-	defineConstant("PATCHBIRTH", GAMMA_B * PBAD * PGOOD / (1 - PBAD));
-	defineConstant("PATCHDEATH", GAMMA_B * (1 - PBAD));
-	defineConstant("JITTER", GAMMA_M * (2 - PGOOD - PBAD));
-	defineConstant("GROW_PROB", (1 - PGOOD) / (2 - PGOOD - PBAD));
 	defineConstant("BAD_F", 1.0); // relative fecundity out of patches: roughly multiplies K
 	defineConstant("GOOD_F", 2.0); // relative fecundity in patches: roughly multiplies K
-	defineConstant("NSTEPS", 100); // number of sub-steps to make landscape continuous-time-like
 	
 	initializeMutationType("m1", 0.5, "g", 0.0, 2);
 	initializeGenomicElementType("g1", m1, 1.0);

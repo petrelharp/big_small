@@ -3,12 +3,30 @@ source("../patch_functions.eidos");
 if (exists("seed"))
     setSeed(seed);
 
+STATSPATH = OUTPATH + ".stats";
+
 if (fileExists(PATCHPATH))
   deleteFile(PATCHPATH);
+if (fileExists(STATSPATH))
+  deleteFile(STATSPATH);
+writeFile(STATSPATH, "gen" + "\t" + "num_good" + "\t" + "num_bad" + "\t" + "prop_good" + "\t" + "theory");
+
+interval = 200;
+ngood = 0;
+nbad = 0;
 
 landscape = InitLandscape(NGRID);
 for (gen in 1:(BURNIN+NUMGENS)) {
   landscape = UpdateLandscape(landscape);
-  if (gen > BURNIN)
+  if (gen > BURNIN) {
+    ngood = ngood + sum(landscape);
+    nbad = nbad + sum(1 - landscape);
     writeFile(PATCHPATH, gen + " " + paste(landscape), append=T);
+  }
+  if ((gen - BURNIN) % interval == 0) {
+    writeFile(STATSPATH, (gen - BURNIN) + "\t" + ngood + "\t" + nbad + "\t"
+              + (ngood/(ngood+nbad)) + "\t" + (PBAD/(PBAD + PGOOD)), append=T);
+    ngood = 0;
+    nbad = 0;
+  }
 }
