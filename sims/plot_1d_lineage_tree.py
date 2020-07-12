@@ -52,7 +52,6 @@ def break_path(path, max_jump=50):
     breaks = [1] + list(np.where(np.abs(diffs) > max_jump)[0]) + [path.shape[1]]
     for j in range(len(breaks) - 1):
         if breaks[j+1] > breaks[j] + 1:
-            print(path[(breaks[j]+1):(breaks[j+1]), :])
             yield path[(breaks[j]+1):(breaks[j+1]), :]
 
 
