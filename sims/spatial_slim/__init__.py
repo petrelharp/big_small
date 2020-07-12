@@ -79,9 +79,9 @@ def get_lineages(ts, children, positions, max_time):
     paths = {}
     for p in positions:
         tree = ts.at(p)
-        for u in nodes:
-            out = [np.array([locs[node_indivs[u], 0], node_times[u]])]
-            u = tree.parent(u)
+        for n in nodes:
+            out = [np.array([locs[node_indivs[n], 0], node_times[n]])]
+            u = tree.parent(n)
             while u is not tskit.NULL:
                 uind = node_indivs[u]
                 if (uind is tskit.NULL
@@ -90,7 +90,7 @@ def get_lineages(ts, children, positions, max_time):
                     break
                 out.append(np.array([locs[uind, 0], node_times[u]]))
                 u = tree.parent(u)
-            paths[(u, p)] = np.row_stack(out)
+            paths[(n, p)] = np.row_stack(out)
     return paths
 
 
