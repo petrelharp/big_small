@@ -1,13 +1,13 @@
-defineConstant("seed", 125);
+defineConstant("seed", 124);
 
 defineConstant("OUTPATH", "./small_example");
 defineConstant("PATCHPATH", OUTPATH + ".landscape");
 if (fileExists(PATCHPATH))
     deleteFile(PATCHPATH);
 
-defineConstant("NUMGENS", 100);
+defineConstant("NUMGENS", 200);
 defineConstant("BURNIN", 1);      
-defineConstant("W", 1000.0);  // dimension of the simulated area
+defineConstant("W", 100.0);  // dimension of the simulated area
 defineConstant("PGOOD", 0.1); // mean length of a patch is 1/PGOOD
 defineConstant("PBAD", 0.02); // mean length of inter-patch is 1/PBAD
 defineConstant("GAMMA_B", 4.0); // relative rate of births/deaths

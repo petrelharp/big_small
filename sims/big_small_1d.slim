@@ -114,7 +114,6 @@ early() {
 		competition = i1.totalOfNeighborStrengths(inds);
 	} else { // density-driven establishment only
 		old = inds.age > 0;
-		inds[old].fitnessScaling = 1 - 1 / L;
 		competition = rep(6.0, p1.individualCount);
 		competition[!old] = i1.totalOfNeighborStrengths(inds[!old]);
 	}
