@@ -63,6 +63,7 @@ def global_var(ts, W, num_targets, max_n):
     has_parents = ts.has_individual_parents()
     num_targets = min(num_targets, ts.num_individuals)
     targets = np.random.choice(np.where(has_parents)[0], num_targets, replace=False)
+    print(f" choosing {num_targets} individuals out of {len(today)} alive (and {ts.num_individuals} total).")
 
     # R[i,j] will give the proportion of the genome
     # that individual j inherits from individual i -- so,
@@ -71,7 +72,6 @@ def global_var(ts, W, num_targets, max_n):
     R = sps.individual_relatedness_matrix(ts)
     R /= 2 * ts.sequence_length
     assert(np.allclose(np.sum(R[:,has_parents], axis=0), 1.0))
-    _, _, v = scipy.sparse.find(R)
     Ru = np.zeros((ts.num_individuals, num_targets))
     for j, i in enumerate(targets):
         Ru[i, j] = 1.0
@@ -99,6 +99,8 @@ def global_var(ts, W, num_targets, max_n):
         dt[j, ~np.isclose(totals, 1)] = np.nan
         var[j, ~np.isclose(totals, 1)] = np.nan
         if np.all(~np.isclose(totals, 1)):
+            print("All remaining probabilities less than 1:", totals)
+            print(f" stopping at generation {j}.")
             break
     return dx, dt, var
 
@@ -120,8 +122,8 @@ for treefile in tsfiles:
         print("\t".join(["n", "mean_dt", "sd_dt", "mean_var", "sd_var", "2.5%", "25%", "50%", "75%", "97.5%"]), file=f)
         for n in range(dt.shape[0]):
             print("\t".join(map(str,
-                [n, np.mean(dt[n,:]), np.std(dt[n,:]), np.mean(var[n,:]), np.std(var[n,:])]
-                + list(np.quantile(var[n,:], [.025, .25, .5, .75, .975])))), file=f)
+                [n, np.nanmean(dt[n,:]), np.nanstd(dt[n,:]), np.nanmean(var[n,:]), np.nanstd(var[n,:])]
+                + list(np.nanquantile(var[n,:], [.025, .25, .5, .75, .975])))), file=f)
 
     # local statistics
     ldx, ldt = local_var(ts, W)

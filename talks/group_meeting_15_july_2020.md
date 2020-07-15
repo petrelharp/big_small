@@ -171,6 +171,8 @@ $$
 
 # Life in a big-small world
 
+##
+
 ::: {.columns}
 ::::::: {.column width=50%}
 
@@ -190,20 +192,31 @@ where patches move in a *reversible* way by:
 :::
 ::::::: {.column width=50%}
 
-![example landscape](figs/small_example.landscape.png)
+![example landscape](figs/small_example.landscape.png){width=70%}
 
 :::
 ::::::
 
 ##
 
-![bigger example](figs/example.landscape.png)
+![bigger example](figs/example.landscape.png){width=70%}
 
 
-## Lineages
+## 
 
-picture of lineages
+![](figs/run_BURNIN_1000_NUMGENS_15000_W_300_GAMMA_B_0.15_GAMMA_M_0.1_PGOOD_0.1_PBAD_0.05_seed_1501.lineages.png){width=70%}
 
+##
+
+![](figs/run_BURNIN_1000_NUMGENS_15000_W_300_GAMMA_B_10.2_GAMMA_M_0.1_PGOOD_0.1_PBAD_0.05_seed_1510.lineages.png){width=70%}
+
+##
+
+![](figs/run_BURNIN_1000_NUMGENS_15000_W_300_GAMMA_B_0.1_GAMMA_M_0.01_PGOOD_0.1_PBAD_0.05_seed_1601.lineages.png){width=70%}
+
+##
+
+![](figs/run_BURNIN_1000_NUMGENS_15000_W_300_GAMMA_B_0.1_GAMMA_M_0.4_PGOOD_0.1_PBAD_0.05_seed_1610.lineages.png){width=70%}
 
 ##
 
