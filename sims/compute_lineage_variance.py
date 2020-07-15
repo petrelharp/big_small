@@ -86,18 +86,18 @@ def global_var(ts, W, num_targets, max_n):
         Ru = R @ Ru
         dx[j, :] = x @ Ru - x0
         dt[j, :] = t @ Ru - t0
-        for k in range(num_targets):
-            with np.errstate(invalid='ignore', divide='ignore'):
-                z = (x - x0[k])** 2 / (t - t0[k])
-            assert(np.sum(np.isnan(z) @ Ru[:, k]) == 0)
-            assert(np.sum(np.isinf(z) @ Ru[:, k]) == 0)
-            z[np.isnan(z)] = 0
-            z[np.isinf(z)] = 0
-            var[j, k] = z @ Ru[:, k]
         totals = np.sum(Ru[has_parents, :], axis=0)
         dx[j, ~np.isclose(totals, 1)] = np.nan
         dt[j, ~np.isclose(totals, 1)] = np.nan
-        var[j, ~np.isclose(totals, 1)] = np.nan
+        for k in range(num_targets):
+            if np.isclose(totals[k], 1):
+                with np.errstate(invalid='ignore', divide='ignore'):
+                    z = (x - x0[k])** 2 / (t - t0[k])
+                assert(np.sum(np.isnan(z) @ Ru[:, k]) == 0)
+                assert(np.sum(np.isinf(z) @ Ru[:, k]) == 0)
+                z[np.isnan(z)] = 0
+                z[np.isinf(z)] = 0
+                var[j, k] = z @ Ru[:, k]
         if np.all(~np.isclose(totals, 1)):
             print("All remaining probabilities less than 1:", totals)
             print(f" stopping at generation {j}.")
@@ -117,7 +117,7 @@ for treefile in tsfiles:
     W = patchrows.shape[1]
 
     # global statistics
-    dx, dt, var = global_var(ts, W, num_targets=10, max_n=1000)
+    dx, dt, var = global_var(ts, W, num_targets=50, max_n=1000)
     with open(outfile, 'w') as f:
         print("\t".join(["n", "mean_dt", "sd_dt", "mean_var", "sd_var", "2.5%", "25%", "50%", "75%", "97.5%"]), file=f)
         for n in range(dt.shape[0]):
