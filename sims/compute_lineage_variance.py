@@ -21,17 +21,10 @@ if len(sys.argv) < 2:
 
 tsfiles = sys.argv[1:]
 
-for treefile in tsfiles:
-    outbase = ".".join(treefile.split(".")[:-1])
-    outfile = outbase + ".variances.txt"
-    plotfile = outbase + ".variances.png"
-    print(f"Writing variances in {treefile} to {outfile} and plotting to {plotfile}")
-    ts = pyslim.load(treefile)
-    # get the width of the region
-    patchfile = treefile + ".landscape"
-    patchrows = np.loadtxt(patchfile, max_rows=2)
-    W = patchrows.shape[1]
-
+def local_var(ts, W):
+    """
+    Returns the vectors of dx and dt across all parent-offspring pairs.
+    """
     today = ts.individuals_alive_at(0)
     has_parents = ts.has_individual_parents()
     has_parents_nodes = np.append(has_parents, False)[ts.tables.nodes.individual]
@@ -50,37 +43,110 @@ for treefile in tsfiles:
     ind_locs = ts.individual_locations
     node_locs = ts.individual_locations[ts.tables.nodes.individual]
     times = ts.individual_times
-    # TODO: need to compute var/dt separately for each parent-child link
     dt = (times @ inR - ts.tables.nodes.time)
     dx = (ind_locs[:,0] @ inR - node_locs[:,0])
     # for periodic boundaries
     dx[dx > W / 2] -= W
     dx[dx < - W / 2] += W
-    vardt = dx ** 2 / dt
     assert(np.min(dt[has_parents_nodes]) > 0)
+    return dx[has_parents_nodes], dt[has_parents_nodes]
 
+
+def global_var(ts, W, num_targets, max_n):
+    """
+    Picks num_targets random individuals alive today
+    and returns (max_n, num_targets) arrays for each of
+    dx, dt, and var, giving the mean displacement, mean dt,
+    and mean (dx**2/dt) across level-n ancestors.
+    """
+    today = ts.individuals_alive_at(0)
+    has_parents = ts.has_individual_parents()
+    num_targets = min(num_targets, ts.num_individuals)
+    targets = np.random.choice(np.where(has_parents)[0], num_targets, replace=False)
+
+    # R[i,j] will give the proportion of the genome
+    # that individual j inherits from individual i -- so,
+    # most of the nonzero entries of inR[:,has_parents_nodes] should be 0.5,
+    # with occasional 1.0s, and columns should sum to 1.0
+    R = sps.individual_relatedness_matrix(ts)
+    R /= 2 * ts.sequence_length
+    assert(np.allclose(np.sum(R[:,has_parents], axis=0), 1.0))
+    _, _, v = scipy.sparse.find(R)
+    Ru = np.zeros((ts.num_individuals, num_targets))
+    for j, i in enumerate(targets):
+        Ru[i, j] = 1.0
+    x = ts.individual_locations[:, 0].reshape((1, ts.num_individuals))
+    x0 = x[0, targets]
+    t = ts.individual_times.reshape((1,ts.num_individuals))
+    t0 = t[0, targets]
+    dx = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
+    dt = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
+    var = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
+    for j in range(max_n):
+        Ru = R @ Ru
+        dx[j, :] = x @ Ru - x0
+        dt[j, :] = t @ Ru - t0
+        for k in range(num_targets):
+            with np.errstate(invalid='ignore', divide='ignore'):
+                z = (x - x0[k])** 2 / (t - t0[k])
+            assert(np.sum(np.isnan(z) @ Ru[:, k]) == 0)
+            assert(np.sum(np.isinf(z) @ Ru[:, k]) == 0)
+            z[np.isnan(z)] = 0
+            z[np.isinf(z)] = 0
+            var[j, k] = z @ Ru[:, k]
+        totals = np.sum(Ru[has_parents, :], axis=0)
+        dx[j, ~np.isclose(totals, 1)] = np.nan
+        dt[j, ~np.isclose(totals, 1)] = np.nan
+        var[j, ~np.isclose(totals, 1)] = np.nan
+        if np.all(~np.isclose(totals, 1)):
+            break
+    return dx, dt, var
+
+for treefile in tsfiles:
+    outbase = ".".join(treefile.split(".")[:-1])
+    outfile = outbase + ".variances.txt"
+    local_outfile = outbase + ".local_variances.txt"
+    local_plotfile = outbase + ".local_variances.png"
+    print(f"Writing variances in {treefile} to {outfile} and {local_outfile} and plotting to {local_plotfile}")
+    ts = pyslim.load(treefile)
+    # get the width of the region
+    patchfile = treefile + ".landscape"
+    patchrows = np.loadtxt(patchfile, max_rows=2)
+    W = patchrows.shape[1]
+
+    # global statistics
+    dx, dt, var = global_var(ts, W, num_targets=10, max_n=1000)
     with open(outfile, 'w') as f:
+        print("\t".join(["n", "mean_dt", "sd_dt", "mean_var", "sd_var", "2.5%", "25%", "50%", "75%", "97.5%"]), file=f)
+        for n in range(dt.shape[0]):
+            print("\t".join(map(str,
+                [n, np.mean(dt[n,:]), np.std(dt[n,:]), np.mean(var[n,:]), np.std(var[n,:])]
+                + list(np.quantile(var[n,:], [.025, .25, .5, .75, .975])))), file=f)
+
+    # local statistics
+    ldx, ldt = local_var(ts, W)
+    vardt = ldx ** 2 / ldt
+    with open(local_outfile, 'w') as f:
         print("\t".join(["mean", "stdev", "2.5%", "25%", "50%", "75%", "97.5%"]), file=f)
         print("\t".join(map(str,
-            [np.mean(vardt[has_parents_nodes]), np.std(vardt[has_parents_nodes])]
-            + list(np.quantile(vardt[has_parents_nodes], [.025, .25, .5, .75, .975])))), file=f)
+            [np.mean(vardt), np.std(vardt)]
+            + list(np.quantile(vardt, [.025, .25, .5, .75, .975])))), file=f)
 
-
-    kde = scipy.stats.gaussian_kde(np.row_stack([dt[has_parents_nodes], np.abs(dx[has_parents_nodes])]))
+    kde = scipy.stats.gaussian_kde(np.row_stack([ldt, np.abs(ldx)]))
     X, Y = np.meshgrid(
-            np.linspace(0.0, np.max(dt[has_parents_nodes]), 51),
-            np.linspace(0.0, np.max(np.abs(dx[has_parents_nodes])), 51))
+            np.linspace(0.0, np.max(ldt), 51),
+            np.linspace(0.0, np.max(np.abs(ldx)), 51))
     Z = kde([X.flatten(), Y.flatten()])
     Z.shape = X.shape
     fig, ax = plt.subplots(figsize=(9, 9))
-    ax.scatter(dt[has_parents_nodes], np.abs(dx[has_parents_nodes]), s=5)
+    ax.scatter(ldt, np.abs(ldx), s=5)
     ax.set_xlabel("dt")
     ax.set_ylabel("|dx|")
     ax.contour(X, Y, Z,
                colors='r',
                alpha=0.95)
 
-    fig.savefig(plotfile)
+    fig.savefig(local_plotfile)
     plt.close(fig)
 
 print("Done.\n")
