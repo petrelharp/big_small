@@ -21,6 +21,8 @@ if len(sys.argv) < 2:
 
 tsfiles = sys.argv[1:]
 
+do_local = False
+
 def local_var(ts, W):
     """
     Returns the vectors of dx and dt across all parent-offspring pairs.
@@ -70,11 +72,13 @@ def global_var(ts, W, num_targets, max_n):
     # most of the nonzero entries of inR[:,has_parents_nodes] should be 0.5,
     # with occasional 1.0s, and columns should sum to 1.0
     R = sps.individual_relatedness_matrix(ts)
+    # R.tocsr()
     R /= 2 * ts.sequence_length
     assert(np.allclose(np.sum(R[:,has_parents], axis=0), 1.0))
-    Ru = np.zeros((ts.num_individuals, num_targets))
-    for j, i in enumerate(targets):
-        Ru[i, j] = 1.0
+    Ru = scipy.sparse.csc_matrix(
+            (np.repeat(1.0, num_targets),
+             (targets,
+              np.arange(num_targets))), shape=(ts.num_individuals, num_targets))
     x = ts.individual_locations[:, 0].reshape((1, ts.num_individuals))
     x0 = x[0, targets]
     t = ts.individual_times.reshape((1,ts.num_individuals))
@@ -83,22 +87,23 @@ def global_var(ts, W, num_targets, max_n):
     dt = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
     var = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
     for j in range(max_n):
-        Ru = R @ Ru
+        Ru = R.dot(Ru)
         dx[j, :] = x @ Ru - x0
         dt[j, :] = t @ Ru - t0
-        totals = np.sum(Ru[has_parents, :], axis=0)
-        dx[j, ~np.isclose(totals, 1)] = np.nan
-        dt[j, ~np.isclose(totals, 1)] = np.nan
+        totals = np.array(np.sum(Ru[has_parents, :], axis=0)).reshape((num_targets,))
+        badones = np.array(~np.isclose(totals, 1)).reshape((num_targets,))
+        dx[j, badones] = np.nan
+        dt[j, badones] = np.nan
         for k in range(num_targets):
             if np.isclose(totals[k], 1):
                 with np.errstate(invalid='ignore', divide='ignore'):
                     z = (x - x0[k])** 2 / (t - t0[k])
-                assert(np.sum(np.isnan(z) @ Ru[:, k]) == 0)
-                assert(np.sum(np.isinf(z) @ Ru[:, k]) == 0)
-                z[np.isnan(z)] = 0
-                z[np.isinf(z)] = 0
-                var[j, k] = z @ Ru[:, k]
-        if np.all(~np.isclose(totals, 1)):
+                a = Ru[:, k]
+                znan = ~np.isfinite(z)
+                assert(np.sum(znan @ a) == 0)
+                z[znan] = 0
+                var[j, k] = z @ a
+        if np.all(badones):
             print("All remaining probabilities less than 1:", totals)
             print(f" stopping at generation {j}.")
             break
@@ -125,30 +130,33 @@ for treefile in tsfiles:
                 [n, np.nanmean(dt[n,:]), np.nanstd(dt[n,:]), np.nanmean(var[n,:]), np.nanstd(var[n,:])]
                 + list(np.nanquantile(var[n,:], [.025, .25, .5, .75, .975])))), file=f)
 
-    # local statistics
-    ldx, ldt = local_var(ts, W)
-    vardt = ldx ** 2 / ldt
-    with open(local_outfile, 'w') as f:
-        print("\t".join(["mean", "stdev", "2.5%", "25%", "50%", "75%", "97.5%"]), file=f)
-        print("\t".join(map(str,
-            [np.mean(vardt), np.std(vardt)]
-            + list(np.quantile(vardt, [.025, .25, .5, .75, .975])))), file=f)
+    if do_local:
+        # local statistics
+        ldx, ldt = local_var(ts, W)
+        vardt = ldx ** 2 / ldt
+        with open(local_outfile, 'w') as f:
+            print("\t".join(["mean", "stdev", "2.5%", "25%", "50%", "75%", "97.5%"]), file=f)
+            print("\t".join(map(str,
+                [np.mean(vardt), np.std(vardt)]
+                + list(np.quantile(vardt, [.025, .25, .5, .75, .975])))), file=f)
 
-    kde = scipy.stats.gaussian_kde(np.row_stack([ldt, np.abs(ldx)]))
-    X, Y = np.meshgrid(
-            np.linspace(0.0, np.max(ldt), 51),
-            np.linspace(0.0, np.max(np.abs(ldx)), 51))
-    Z = kde([X.flatten(), Y.flatten()])
-    Z.shape = X.shape
-    fig, ax = plt.subplots(figsize=(9, 9))
-    ax.scatter(ldt, np.abs(ldx), s=5)
-    ax.set_xlabel("dt")
-    ax.set_ylabel("|dx|")
-    ax.contour(X, Y, Z,
-               colors='r',
-               alpha=0.95)
+        kde = scipy.stats.gaussian_kde(np.row_stack([ldt, np.abs(ldx)]))
+        X, Y = np.meshgrid(
+                np.linspace(0.0, np.max(ldt), 51),
+                np.linspace(0.0, np.max(np.abs(ldx)), 51))
+        Z = kde([X.flatten(), Y.flatten()])
+        Z.shape = X.shape
+        fig, ax = plt.subplots(figsize=(9, 9))
+        ax.scatter(ldt, np.abs(ldx), s=5)
+        ax.set_xlabel("dt")
+        ax.set_ylabel("|dx|")
+        ax.contour(X, Y, Z,
+                   colors='r',
+                   alpha=0.95)
 
-    fig.savefig(local_plotfile)
-    plt.close(fig)
+        fig.savefig(local_plotfile)
+        plt.close(fig)
+    else:
+        print("Skipping local stats.")
 
 print("Done.\n")
