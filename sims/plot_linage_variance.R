@@ -7,6 +7,7 @@ defaults <- list(
                  PGOOD = 0.1,
                  PBAD = 0.02
                  )
+LOCAL_VARDT <- 19.3  # all local variances are within 0.3 of this
 
 parse_params <- function (vf) {
     info <- strsplit(gsub("GAMMA_", "GAMMA", gsub(".variances.txt", "", basename(vf))), "_")[[1]][-1]
@@ -86,10 +87,14 @@ for (x in varlist) {
 }
 vartables$file <- factor(vartables$file)
 
-pdf(file='speeds.pdf', width=8, height=4, pointsize=10)
+GENTIME <- with(subset(vartables, n > 100), mean(mean_dt / n))
+NAIVE_VARDT <- ((6^2 + (6+1)^2)/2) / GENTIME
 
+# plot all the speed curves on top of each other
+pdf(file='speed_curves.pdf', width=8, height=4, pointsize=10)
     plot(0, type='n', xlim=c(0, 200), ylim=c(0, 20),
          xlab='number of generations', ylab=expression(abs(dx)/sqrt(dt)))
+    abline(h=LOCAL_VARDT, col='red', lty=3)
     gammam_vals <- sort(unique(vartables$GAMMAM))
     cols <- heat.colors(length(gammam_vals))
     for (k in 1:nlevels(vartables$file)) {
@@ -97,7 +102,71 @@ pdf(file='speeds.pdf', width=8, height=4, pointsize=10)
                     # & GAMMAB == 0.1)
         lines(x$n, sqrt(x$mean_var), col=cols[match(x$GAMMAM[1], gammam_vals)])
     }
+dev.off()
 
+######
+# what combinations do we have?
+parvals <- unique(vartables[, names(defaults)])
+parvals$plotnum <- rep(NA, nrow(parvals))
+parvals$plotnum[with(parvals, GAMMAB == 0.1 & PBAD == 0.05 & PGOOD == 0.1)] <- 1
+parvals$plotnum[with(parvals, GAMMAM == 0.1 & PBAD == 0.05 & PGOOD == 0.1)] <- 2
+parvals$plotnum[with(parvals, GAMMAM == 0.1 & PBAD == 0.02 & PGOOD == 0.1)] <- 3
+parvals$plotnum[with(parvals, GAMMAM == 1.0 & PBAD == 0.02 & PGOOD == 0.1)] <- 4
+
+# extract at certain generations
+pdf(file="speeds.pdf", width=9, height=10, pointsize=10)
+    param_labels <- list(GAMMAB = expression(gamma[b]),
+                         GAMMAM = expression(gamma[m]),
+                         PBAD = expression(p[bad]),
+                         PGOOD = expression(p[good]))
+
+    ## PLOT 1
+    plot_specs <- list(plot1 = list(GAMMAM = "*",
+                                    GAMMAB = 0.1,
+                                    PBAD = 0.05,
+                                    PGOOD = 0.1),
+                       plot2 = list(GAMMAM = 0.1,
+                                    GAMMAB = "*",
+                                    PBAD = 0.05,
+                                    PGOOD = 0.1),
+                       plot3 = list(GAMMAM = 0.1,
+                                    GAMMAB = "*",
+                                    PBAD = 0.02,
+                                    PGOOD = 0.1),
+                       plot4 = list(GAMMAM = 1.0,
+                                    GAMMAB = "*",
+                                    PBAD = 0.02,
+                                    PGOOD = 0.1))
+
+    nvals <- c(50, 100, 500, 999)
+    layout(matrix(1:4, nrow=2))
+    for (k in seq_along(plot_specs)) {
+        keep_params <- plot_specs[[k]]
+        plot_param <- names(keep_params[sapply(keep_params, "==", "*")])
+        keep <- (vartables$n %in% nvals)
+        for (pn in names(keep_params[sapply(keep_params, "!=", "*")])) {
+            keep <- (keep & (vartables[[pn]] == keep_params[[pn]]))
+        }
+        x <- subset(vartables, keep)
+        stopifnot(nrow(unique(x[,setdiff(names(defaults), plot_param)])) == 1)
+        main <- substitute(paste(gamma[m]==GAMMAM, ", ",
+                                 gamma[b]==GAMMAB, ", ",
+                                 p[bad]==PBAD, ", ",
+                                 p[good]==PGOOD), keep_params)
+
+        plot(as.formula(paste("mean_var ~", plot_param)), data=x,
+             col=match(n, nvals), main=main, xlab=param_labels[[plot_param]],
+             ylim=c(0, 60))
+            abline(h=LOCAL_VARDT, col='red', lty=3)
+            abline(h=NAIVE_VARDT, col='blue', lty=3)
+        if (k == 3) {
+            legend("topright",
+                   pch=c(rep(1, length(nvals)), rep(NA,2)),
+                   lty=c(rep(NA, length(nvals)), rep(3,2)),
+                   col=c(seq_along(nvals), c('red', 'blue')),
+                   legend=c(nvals, 'parent-child', 'naive'), title='generations ago')
+        }
+    }
 dev.off()
 
 

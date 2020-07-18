@@ -1,0 +1,18 @@
+defineConstant("seed", 125);
+
+defineConstant("OUTPATH", "./example3");
+defineConstant("PATCHPATH", OUTPATH + ".landscape");
+if (fileExists(PATCHPATH))
+    deleteFile(PATCHPATH);
+
+defineConstant("NUMGENS", 500);
+defineConstant("BURNIN", 1);      
+defineConstant("W", 300.0);  // dimension of the simulated area
+defineConstant("PGOOD", 0.1); // mean length of a patch is 1/PGOOD
+defineConstant("PBAD", 0.05); // mean length of inter-patch is 1/PBAD
+defineConstant("GAMMA_B", 100.0); // relative rate of births/deaths
+defineConstant("GAMMA_M", 5.0); // relative rate of patch "jitter"
+
+defineConstant("NGRID", asInteger(W));
+defineConstant("GRID", seq(0, W, length=NGRID));
+

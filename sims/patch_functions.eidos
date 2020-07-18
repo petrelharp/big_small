@@ -38,10 +38,16 @@ function (*) UpdateLandscape(numeric x) {
     debug = F;
     n = length(x);
     t = 0;
+    if (debug) { catn("--------------------"); }
     while (T) {
         lefts = which(diff(c(x[n-1], x)) > 0);
         rights = which(diff(c(x, x[0])) < 0);
         np = length(lefts);
+        if (np > 0) {
+          if (rights[0] < lefts[0]) {
+            rights = c(rights[seqLen(np-1)+1], rights[0]);
+          }
+        }
         ones = (lefts == rights);
         if (debug) {
           if (length(rights) != np) { stop("lefts != rights"); }
@@ -49,6 +55,9 @@ function (*) UpdateLandscape(numeric x) {
           if (any(x[mod(lefts-1,n)] != 0)) { stop("lefts wrong!"); }
           if (any(x[rights] != 1)) { stop("rights wrong"); }
           if (any(x[mod(rights+1, n)] != 0)) { stop("rights wrong!"); }
+          if (any(x[lefts[ones]] != 1)
+              | any(x[mod(lefts[ones]-1, n)] != 0)
+              | any(x[mod(lefts[ones]+1, n)] != 0)) { stop("ones wrong!"); }
         }
         p = rep(0.0, n);
         p[x == 0] = PATCHBIRTH;
@@ -62,7 +71,6 @@ function (*) UpdateLandscape(numeric x) {
         p[lefts[ones]] = PATCHDEATH;
         total_rate = sum(p);
         if (debug) {
-          catn("..........>");
           a = rep(".", n);
           a[x == 0] = "b";
           a[lefts] = "l";
@@ -81,12 +89,16 @@ function (*) UpdateLandscape(numeric x) {
         }
         p = p / total_rate;
         u = runif(1);
+        uu = 0;
         k = 0;
-        while (u > 0) {
-            u = u - p[k];
+        while (uu < u) {
+            uu = uu + p[k];
             k = k + 1;
         }
         k = k - 1;
+        if (debug & ((sum(p[seqLen(k)]) >= u) | (sum(p[seqLen(k+1)]) < u))) {
+          stop("random choice wrong: want " + sum(p[seqLen(k)]) + " < " + u + " <= " + sum(p[seqLen(k+1)]));
+        }
         if (x[k] == 1) {
             x[k] = 0;
         } else {

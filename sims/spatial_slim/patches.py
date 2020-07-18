@@ -82,7 +82,7 @@ def match_patches(patches, t, lefts, rights, tolerance):
         patches[k][0] = False
 
 
-def patch_polygons(times, vals, max_time=None, tolerance=5):
+def patch_polygons(times, vals, max_time=None, tolerance=20):
     if max_time is None:
         max_time = np.max(times)
     patches = []
