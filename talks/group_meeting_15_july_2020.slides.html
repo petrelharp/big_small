@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="Peter Ralph">
+  <meta name="dcterms.date" content="2020-07-15">
+  <title>Where did your ancestors live? Tracing lineages across space.</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="reveal.js/css/reveal.css">
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="reveal.js/css/theme/simple.css" id="theme">
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match( /print-pdf/gi ) ? 'reveal.js/css/print/pdf.css' : 'reveal.js/css/print/paper.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+  </script>
+  <!--[if lt IE 9]>
+  <script src="reveal.js/lib/js/html5shiv.js"></script>
+  <![endif]-->
+  <style type="text/css">
+  
+  .reveal { font-size: 30px; }
+  
+  .reveal h1 { font-size: 1.5em; } 
+  
+  .reveal h2 { font-size: 1.2em; } 
+  
+  .reveal .slides { text-align: left; }
+  
+  .reveal .slides figure { text-align: center; }
+  
+  .centered p { text-align: center; }
+  
+  .caption p { font-size: 75%; }
+  
+  div.floatright { float: right; text-align: right; }
+  
+  .reveal figcaption { display: none; }
+  
+  .reveal img { border: none; }
+  
+  .reveal section img { border: none; }
+  
+  .MathJax_Display { margin: 0; }
+  
+  img.finger { vertical-align: text-top; }
+  
+  </style>
+  <div style="display: none">
+  \[
+  \newcommand{\E}{\mathbb{E}}
+  \renewcommand{\P}{\mathbb{P}}
+  \DeclareMathOperator{\var}{var}
+  \]
+  </div>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide">
+  <h1 class="title">Where did your ancestors live? Tracing lineages across space.</h1>
+  <p class="author">Peter Ralph</p>
+  <p class="date">15 July 2020</p>
+</section>
+
+<section><section id="whats-a-lineage" class="title-slide slide level1"><h1>What’s a lineage?</h1></section><section id="section" class="slide level2">
+<h2></h2>
+<p>The <em>lineage</em> of a particular gene is the path <span class="math display">\[
+    t \mapsto L(t),
+\]</span> where <span class="math inline">\(L(t)\)</span> is</p>
+<ul>
+<li>the ancestor from time <span class="math inline">\(t\)</span> ago that the gene was inherited from, or maybe</li>
+<li>the <em>location</em> of that ancestor in space.</li>
+</ul>
+</section><section id="section-1" class="slide level2">
+<h2></h2>
+<p>Suppose in a population of annual plants, at time <span class="math inline">\(t\)</span> ago</p>
+<ul>
+<li>there are <span class="math inline">\(N_x(t)\)</span> individuals at location <span class="math inline">\(x\)</span>,</li>
+<li>that each produce <span class="math inline">\(\lambda(x)\)</span> seeds (and die),</li>
+<li>and each seed moves to <span class="math inline">\(y\)</span> with probability <span class="math inline">\(m_{xy}\)</span>,</li>
+<li>surviving with probability <span class="math inline">\(s(y)\)</span>.</li>
+</ul>
+<div class="fragment">
+<p>Then <span class="math display">\[\begin{aligned}
+    N_y(t-1)
+    = \sum_x N_x(t) \lambda(x) m_{xy} s(y) ,
+\end{aligned}\]</span></p>
+</div>
+<div class="fragment">
+<p>and if <span class="math inline">\(L(t) = y\)</span> then <span class="math display">\[\begin{aligned}
+    \P\{L(t+1) = x\}
+    =
+    \frac{ N_x(t+1) \lambda(x) m_{xy} }
+        { \sum_z N_z(t+1) \lambda(z) m_{zy} } .
+\end{aligned}\]</span></p>
+</div>
+</section><section id="example" class="slide level2">
+<h2>Example:</h2>
+<p>Let <span class="math inline">\(N_x(t) = N\)</span> for <span class="math inline">\(x \in \mathbb{Z}\)</span>, <span class="math inline">\(t \ge 0\)</span> and <span class="math inline">\(m_{xy} = m(|y-x|)\)</span> with <span class="math display">\[\begin{aligned}
+    \sum_x x m(x) &amp;= 0 \\
+    \sum_x x^2 m(x) &amp;= \sigma^2 .
+\end{aligned}\]</span></p>
+<p>Then <span class="math inline">\(\E[L(t)^2] = t \sigma^2\)</span>, and <span class="math inline">\(L(t/\epsilon) / \sqrt{\epsilon}\)</span> converges to a Brownian motion.</p>
+</section><section id="more-general-observations" class="slide level2">
+<h2>More general observations:</h2>
+<ol type="1">
+<li><p>Times between lineage jumps are drawn from the <em>generation time</em>, i.e., the typical age of parent at time of birth of child.</p></li>
+<li><p>Lineages move towards areas of greater offspring production.</p></li>
+</ol>
+</section></section>
+<section><section id="questions" class="title-slide slide level1"><h1>Questions</h1></section><section id="what-do-lineages-tell-us" class="slide level2">
+<h2>What do lineages tell us?</h2>
+<p><em>Basic observation:</em> “<span class="math inline">\(L(0) = y\)</span> and <span class="math inline">\(L(t) = x\)</span>” means that the genome at <span class="math inline">\(x\)</span> was the parent of that at <span class="math inline">\(y\)</span>.</p>
+<div class="fragment">
+<p>and so <span class="math display">\[\begin{aligned}
+    \P\{ L(t) = x \}
+    &amp;=
+    \text{( proportion of genomes today at $y$ } \\
+    &amp;\qquad \text{ descended from those that were at $x$ )}
+\end{aligned}\]</span></p>
+</div>
+</section><section id="how-fast-do-genes-spread" class="slide level2">
+<h2>How fast do genes spread?</h2>
+<p>Suppose a mutation occurred <span class="math inline">\(t\)</span> ago at <span class="math inline">\(x\)</span>. It’s density today is <span class="math display">\[\begin{aligned}
+    \propto \frac{\P^x\{ L(t) = y \}}{N(x)}
+\end{aligned}\]</span></p>
+<div class="fragment">
+<p>In the example, <span class="math inline">\(\sim \sigma \sqrt{t}\)</span>.</p>
+</div>
+</section><section id="wheres-the-long-term-fitness" class="slide level2">
+<h2>Where’s the long-term fitness?</h2>
+<p>If <span class="math inline">\(L\)</span> has stationary distribution <span class="math inline">\(\pi\)</span> then <span class="math display">\[\begin{aligned}
+    \frac{\pi(x)}{N(x)}
+    \propto
+    \text{( mean fitness at $x$ )} .
+\end{aligned}\]</span></p>
+</section></section>
+<section><section id="thinking-backwards" class="title-slide slide level1"><h1>Thinking backwards</h1></section><section id="effective-dispersal" class="slide level2">
+<h2>Effective dispersal</h2>
+<p><strong>Question:</strong> What is <span class="math display">\[\begin{aligned}
+    \lim_{t \to \infty} \frac{\E[L(t)^2]}{ t } := \sigma^2_e 
+\end{aligned}\]</span></p>
+<div class="fragment">
+<p>In general, <span class="math display">\[\begin{aligned}
+    \sigma^2_e \neq \sigma^2 .
+\end{aligned}\]</span></p>
+</div>
+</section><section id="stable-patches" class="slide level2">
+<h2>Stable patches</h2>
+<p>Suppose there are two types of habitat: for <span class="math inline">\(x \in \mathbb{Z}\)</span>: <span class="math display">\[\begin{aligned}
+   x \text{ even } \longrightarrow \text{good, $N(x)$ big} \\
+   x \text{ odd } \longrightarrow \text{good, $N(x)$ small} .
+\end{aligned}\]</span></p>
+<div class="fragment">
+<p>Most odd-distance migrants die, so <span class="math display">\[
+\sigma^2_e \approx 
+    \frac{
+        \sum_{x \ge 1} (2x)^2 m(2x)
+        }{
+        \sum_{x \ge 1} m(2x)
+        }
+        &lt; \sigma^2, \quad \text{ usually.}
+\]</span></p>
+</div>
+</section><section id="negative-correlations" class="slide level2">
+<h2>Negative correlations</h2>
+<p>Now suppose the patches <em>turn over</em>, so <span class="math display">\[\begin{aligned}
+   t + x \text{ even } \longrightarrow \text{good, $N(x)$ big} \\
+   t + x \text{ odd } \longrightarrow \text{good, $N(x)$ small} .
+\end{aligned}\]</span></p>
+<div class="fragment">
+<p>Most <em>even</em>-distance migrants die, so <span class="math display">\[
+\sigma^2_e \approx 
+    \frac{
+        \sum_{x \ge 1} (2x + 1)^2 m(2x + 1)
+        }{
+        \sum_{x \ge 1} m(2x + 1)
+        }
+        &gt; \sigma^2, \quad \text{ usually.}
+\]</span></p>
+</div>
+</section></section>
+<section><section id="life-in-a-big-small-world" class="title-slide slide level1"><h1>Life in a big-small world</h1></section><section id="section-2" class="slide level2">
+<h2></h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p>Consider a dynamic 1d landscape of “good patches” with stationary distribution <span class="math display">\[\begin{aligned}
+    \P\{N(x+1) = \text{big}|N(x) = \text{small}\} &amp;= p_\text{good} \\
+    \P\{N(x+1) = \text{small}|N(x) = \text{big}\} &amp;= p_\text{bad} ,
+\end{aligned}\]</span> where patches move in a <em>reversible</em> way by:</p>
+<ol type="1">
+<li>jittering their edges,</li>
+<li>appearing in bad areas,</li>
+<li>and disappearing when small.</li>
+<li>(No merging/splitting, though.)</li>
+</ol>
+</div><div class="column" style="width:50%;">
+<figure>
+<img data-src="figs/small_example.landscape.png" alt="example landscape" style="width:70.0%" /><figcaption>example landscape</figcaption>
+</figure>
+</div>
+</div>
+</section><section id="section-3" class="slide level2">
+<h2></h2>
+<figure>
+<img data-src="figs/example.landscape.png" alt="bigger example" style="width:70.0%" /><figcaption>bigger example</figcaption>
+</figure>
+</section><section id="section-4" class="slide level2">
+<h2></h2>
+<p><img data-src="figs/run_BURNIN_1000_NUMGENS_15000_W_300_GAMMA_B_0.15_GAMMA_M_0.1_PGOOD_0.1_PBAD_0.05_seed_1501.lineages.png" style="width:70.0%" /></p>
+</section><section id="section-5" class="slide level2">
+<h2></h2>
+<p><img data-src="figs/run_BURNIN_1000_NUMGENS_15000_W_300_GAMMA_B_10.2_GAMMA_M_0.1_PGOOD_0.1_PBAD_0.05_seed_1510.lineages.png" style="width:70.0%" /></p>
+</section><section id="section-6" class="slide level2">
+<h2></h2>
+<p><img data-src="figs/run_BURNIN_1000_NUMGENS_15000_W_300_GAMMA_B_0.1_GAMMA_M_0.01_PGOOD_0.1_PBAD_0.05_seed_1601.lineages.png" style="width:70.0%" /></p>
+</section><section id="section-7" class="slide level2">
+<h2></h2>
+<p><img data-src="figs/run_BURNIN_1000_NUMGENS_15000_W_300_GAMMA_B_0.1_GAMMA_M_0.4_PGOOD_0.1_PBAD_0.05_seed_1610.lineages.png" style="width:70.0%" /></p>
+</section><section id="section-8" class="slide level2">
+<h2></h2>
+<p><span class="math inline">\(\sigma_e\)</span> is determined by</p>
+<ol type="1">
+<li>dispersal variance (<span class="math inline">\(\sigma^2\)</span>),</li>
+<li>cluster movement (<span class="math inline">\(\gamma_m\)</span>), and</li>
+<li>how long lineages are trapped in clusters (<span class="math inline">\(\gamma_b\)</span>).</li>
+</ol>
+</section><section id="questions-1" class="slide level2">
+<h2>Questions</h2>
+<p>How will patch dynamics affect lineage movement, in particular, <span class="math inline">\(\sigma_e\)</span>?</p>
+<ol type="1">
+<li><span class="math inline">\(\sigma_e\)</span> should increase with <em>patch jitter</em>, <span class="math inline">\(\gamma_m\)</span>, and</li>
+<li>increase with <em>patch birth/death</em>, <span class="math inline">\(\gamma_b\)</span>.</li>
+</ol>
+<div class="fragment">
+<p><em>Note:</em> the landscape at each point in time has the <em>same</em> characteristics. How much will its temporal dyanmics change gene flow?</p>
+</div>
+</section></section>
+<section><section id="slimulation" class="title-slide slide level1"><h1>SLiMulation</h1></section><section id="overview-of-the-experiment" class="slide level2">
+<h2>Overview of the “experiment”</h2>
+<p>A population living in continuous space with local discrete-time dynamics:</p>
+<ul>
+<li><p><em>Reproduction:</em> everyone produces Poisson(<span class="math inline">\(f\)</span>) offspring with a random mate chosen from a Gaussian(1) kernel (or, by selfing)</p></li>
+<li><p>with <span class="math inline">\(f = 1.25\)</span> in “bad” habitat and <span class="math inline">\(f=2.25\)</span> in “good”.</p></li>
+<li><p><em>Dispersal:</em> Gaussian(6)</p></li>
+<li><p><em>Establishment:</em> with probability <span class="math display">\[ \frac{1}{1 + C \times \text{( local density )}} \]</span>,</p></li>
+<li><p><em>Mortality:</em> constant probability <span class="math inline">\(1/4\)</span> of death.</p></li>
+</ul>
+</section><section id="section-9" class="slide level2">
+<h2></h2>
+<ul>
+<li>Record locations of everyone alive ever,</li>
+<li>and how they inherited chromosomes from their parents</li>
+<li>in a <em>tree sequence</em>; parsed using tskit and pyslim.</li>
+</ul>
+<p>Width 1,000 neighborhood, burn-in of 1,000 time steps, run for 5,000 time steps: <span class="math inline">\(\sim\)</span> 5,000 individuals alive.</p>
+</section><section id="section-10" class="slide level2">
+<h2></h2>
+<p>(see SLiM)</p>
+</section><section id="computing-sigma2_e" class="slide level2">
+<h2>Computing <span class="math inline">\(\sigma^2_e\)</span>:</h2>
+<p>Extract the <em>relatedness matrix:</em> <span class="math display">\[
+P_{ij} = 1/2 \quad \text{if $i$ is a parent to $j$},
+\]</span> and <span class="math display">\[\begin{aligned}
+    x_i &amp;= \text{( location of individual $i$ )} \\
+    t_i &amp;= \text{( birth time ago of individual $i$ )}
+\end{aligned}\]</span></p>
+<div class="fragment">
+<p>So: <span class="math display">\[\begin{aligned}
+    x^T P^n \delta_i
+\end{aligned}\]</span> is the mean location of <span class="math inline">\(n^\text{th}\)</span>-generation ancestors of individual <span class="math inline">\(i\)</span>.</p>
+</div>
+</section><section id="section-11" class="slide level2">
+<h2></h2>
+<p>Let <span class="math inline">\(L_n\)</span> be the location of a random <span class="math inline">\(n\)</span>th generation ancestor, and <span class="math inline">\(T_n\)</span> be the time since their birth. Then if <span class="math inline">\(z_i = x_i^2 / t_i\)</span>, <span class="math display">\[\begin{aligned}
+    \E^i\left[\frac{(L_n - L_0)^2}{T_n - T_0}\right]
+    = z^T P^n \delta_i .
+\end{aligned}\]</span></p>
+</section></section>
+    </div>
+  </div>
+
+  <script src="reveal.js/lib/js/head.min.js"></script>
+  <script src="reveal.js/js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        // Display the page number of the current slide
+        slideNumber: true,
+        // Push each slide change to the browser history
+        history: true,
+        // Transition style
+        transition: 'none', // none/fade/slide/convex/concave/zoom
+        math: {
+          mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true },
+          { src: 'reveal.js/plugin/math/math.js', async: true },
+          { src: 'reveal.js/plugin/notes/notes.js', async: true }
+        ]
+      });
+    </script>
+    </body>
+</html>
