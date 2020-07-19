@@ -60,6 +60,7 @@ def global_var(ts, W, num_targets, max_n):
     and returns (max_n, num_targets) arrays for each of
     dx, dt, and var, giving the mean displacement, mean dt,
     and mean (dx**2/dt) across level-n ancestors.
+    Also computes the mean parent-child (dx**2/dt) long those lineages.
     """
     today = ts.individuals_alive_at(0)
     has_parents = ts.has_individual_parents()
@@ -83,17 +84,27 @@ def global_var(ts, W, num_targets, max_n):
     x0 = x[0, targets]
     t = ts.individual_times.reshape((1,ts.num_individuals))
     t0 = t[0, targets]
+    # to get the parent-child mean dx**2/dt, we need to compute for each k
+    #  sum_ij R[i,j] (xi - xj)^2 / (ti - tj) Ru[j,k]
+    # so we precompute pcR[j] = sum_i R[ij] (xi - xj)**2 / (ti - tj)
+    i, j, v = scipy.sparse.find(R)
+    v *= (x[0,i] - x[0,j])**2 / (t[0,i] - t[0,j])
+    pcR = np.sum(scipy.sparse.csr_matrix((v, (i, j)), shape=R.shape), axis=0)
+    # set up output
     dx = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
     dt = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
     var = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
+    pc_var = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
     for j in range(max_n):
         Ru = R.dot(Ru)
         dx[j, :] = x @ Ru - x0
         dt[j, :] = t @ Ru - t0
+        pc_var[j, :] = pcR @ Ru
         totals = np.array(np.sum(Ru[has_parents, :], axis=0)).reshape((num_targets,))
         badones = np.array(~np.isclose(totals, 1)).reshape((num_targets,))
         dx[j, badones] = np.nan
         dt[j, badones] = np.nan
+        pc_var[j, badones] = np.nan
         for k in range(num_targets):
             if np.isclose(totals[k], 1):
                 with np.errstate(invalid='ignore', divide='ignore'):
@@ -107,7 +118,7 @@ def global_var(ts, W, num_targets, max_n):
             print("All remaining probabilities less than 1:", totals)
             print(f" stopping at generation {j}.")
             break
-    return dx, dt, var
+    return dx, dt, var, pc_var
 
 for treefile in tsfiles:
     outbase = ".".join(treefile.split(".")[:-1])
@@ -122,13 +133,14 @@ for treefile in tsfiles:
     W = patchrows.shape[1]
 
     # global statistics
-    dx, dt, var = global_var(ts, W, num_targets=50, max_n=1000)
+    dx, dt, var, pc_var = global_var(ts, W, num_targets=50, max_n=1000)
     with open(outfile, 'w') as f:
-        print("\t".join(["n", "mean_dt", "sd_dt", "mean_var", "sd_var", "2.5%", "25%", "50%", "75%", "97.5%"]), file=f)
+        print("\t".join(["n", "mean_dt", "sd_dt", "mean_var", "sd_var", "2.5%", "25%", "50%", "75%", "97.5%", "mean_pc_var", "sd_pc_var"]), file=f)
         for n in range(dt.shape[0]):
             print("\t".join(map(str,
                 [n, np.nanmean(dt[n,:]), np.nanstd(dt[n,:]), np.nanmean(var[n,:]), np.nanstd(var[n,:])]
-                + list(np.nanquantile(var[n,:], [.025, .25, .5, .75, .975])))), file=f)
+                + list(np.nanquantile(var[n,:], [.025, .25, .5, .75, .975]))
+                + [np.nanmean(pc_var[n,:]), np.nanstd(pc_var[n,:])])), file=f)
 
     if do_local:
         # local statistics
