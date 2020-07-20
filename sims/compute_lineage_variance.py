@@ -22,10 +22,10 @@ if len(sys.argv) < 2:
 tsfiles = sys.argv[1:]
 
 do_local = False
-# num_targets = 50
-# max_n = 1000
-num_targets = 5
-max_n = 10
+num_targets = 50
+max_n = 1000
+# num_targets = 5
+# max_n = 10
 
 def dW(a, b, W):
     # shorter displacement in the W-circle
