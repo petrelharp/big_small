@@ -223,14 +223,14 @@ for treefile in tsfiles:
     dx, dt, var, pc_var = global_var(ts, W, num_targets=num_targets, record_steps=record_steps)
     with open(outfile, 'w') as f:
         print("\t".join(["n", "mean_dt", "sd_dt", "mean_var", "sd_var", "2.5%", "25%", "50%", "75%", "97.5%", "mean_pc_var", "sd_pc_var"]), file=f)
-        for n in range(dt.shape[0]):
+        for j, n in enumerate(record_steps):
             with warnings.catch_warnings():
                 # np.nanmean throws warnings when whole rows are nan
                 warnings.simplefilter("ignore", category=RuntimeWarning)
                 print("\t".join(map(str,
-                    [n, np.nanmean(dt[n,:]), np.nanstd(dt[n,:]), np.nanmean(var[n,:]), np.nanstd(var[n,:])]
-                    + list(np.nanquantile(var[n,:], [.025, .25, .5, .75, .975]))
-                    + [np.nanmean(pc_var[n,:]), np.nanstd(pc_var[n,:])])), file=f)
+                    [n, np.nanmean(dt[j,:]), np.nanstd(dt[j,:]), np.nanmean(var[j,:]), np.nanstd(var[j,:])]
+                    + list(np.nanquantile(var[j,:], [.025, .25, .5, .75, .975]))
+                    + [np.nanmean(pc_var[j,:]), np.nanstd(pc_var[j,:])])), file=f)
 
     if do_local:
         # local statistics
