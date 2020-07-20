@@ -22,6 +22,16 @@ if len(sys.argv) < 2:
 tsfiles = sys.argv[1:]
 
 do_local = False
+# num_targets = 50
+# max_n = 1000
+num_targets = 5
+max_n = 10
+
+def dW(a, b, W):
+    # shorter displacement in the W-circle
+    # ..(b-W)..|.a......b..|.(a+W)...
+    # ..(a-W)..|.b......a..|.(b+W)...
+    return (a - b + W / 2) % W - W / 2
 
 def local_var(ts, W):
     """
@@ -46,10 +56,7 @@ def local_var(ts, W):
     node_locs = ts.individual_locations[ts.tables.nodes.individual]
     times = ts.individual_times
     dt = (times @ inR - ts.tables.nodes.time)
-    dx = (ind_locs[:,0] @ inR - node_locs[:,0])
-    # for periodic boundaries
-    dx[dx > W / 2] -= W
-    dx[dx < - W / 2] += W
+    dx = dW(ind_locs[:,0] @ inR, node_locs[:,0], W)
     assert(np.min(dt[has_parents_nodes]) > 0)
     return dx[has_parents_nodes], dt[has_parents_nodes]
 
@@ -88,7 +95,7 @@ def global_var(ts, W, num_targets, max_n):
     #  sum_ij R[i,j] (xi - xj)^2 / (ti - tj) Ru[j,k]
     # so we precompute pcR[j] = sum_i R[ij] (xi - xj)**2 / (ti - tj)
     i, j, v = scipy.sparse.find(R)
-    v *= (x[0,i] - x[0,j])**2 / (t[0,i] - t[0,j])
+    v *= dW(x[0,i], x[0,j], W)**2 / (t[0,i] - t[0,j])
     pcR = np.sum(scipy.sparse.csr_matrix((v, (i, j)), shape=R.shape), axis=0)
     # set up output
     dx = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
@@ -96,20 +103,20 @@ def global_var(ts, W, num_targets, max_n):
     var = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
     pc_var = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
     for j in range(max_n):
-        Ru = R.dot(Ru)
-        dx[j, :] = x @ Ru - x0
-        dt[j, :] = t @ Ru - t0
         pc_var[j, :] = pcR @ Ru
+        Ru = R.dot(Ru)
+        dt[j, :] = t @ Ru - t0
         totals = np.array(np.sum(Ru[has_parents, :], axis=0)).reshape((num_targets,))
         badones = np.array(~np.isclose(totals, 1)).reshape((num_targets,))
-        dx[j, badones] = np.nan
-        dt[j, badones] = np.nan
         pc_var[j, badones] = np.nan
+        dt[j, badones] = np.nan
         for k in range(num_targets):
             if np.isclose(totals[k], 1):
+                xdiff = dW(x, x0[k], W)
                 with np.errstate(invalid='ignore', divide='ignore'):
-                    z = (x - x0[k])** 2 / (t - t0[k])
+                    z = xdiff**2 / (t - t0[k])
                 a = Ru[:, k]
+                dx[j, k] = xdiff @ a
                 znan = ~np.isfinite(z)
                 assert(np.sum(znan @ a) == 0)
                 z[znan] = 0
@@ -118,7 +125,69 @@ def global_var(ts, W, num_targets, max_n):
             print("All remaining probabilities less than 1:", totals)
             print(f" stopping at generation {j}.")
             break
+    if False: #   DEBUG
+        test_dx, test_dt, test_var, test_pc_var = naive_global_var(ts, W, targets, max_n)
+        if not (np.allclose(dx, test_dx, equal_nan=True)
+                and np.allclose(dt, test_dt, equal_nan=True)
+                and np.allclose(var, test_var, equal_nan=True)
+                and np.allclose(pc_var, test_pc_var, equal_nan=True)):
+            print("Something wrong happened.")
     return dx, dt, var, pc_var
+
+
+def naive_global_var(ts, W, targets, max_n):
+    """
+    Naive implementation of global_var( ) that should always agree (but be slower);
+    used for testing.
+    """
+    num_targets = len(targets)
+    has_parents = ts.has_individual_parents()
+    indiv_nodes = np.isin(ts.tables.nodes.individual, np.where(has_parents)[0])
+    dx = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
+    dt = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
+    var = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
+    pc_var = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
+    edges = ts.tables.edges
+    for j, target in enumerate([ts.individual(t) for t in targets]):
+        inds = [target]
+        done = False
+        for n in range(max_n):
+            this_dx = []
+            this_dt = []
+            this_var = []
+            this_pc_var = []
+            next_inds = []
+            for ind in inds:
+                ind_edges = np.logical_and(
+                                np.isin(edges.child, ind.nodes),
+                                indiv_nodes[edges.parent])
+                total = np.sum(edges.right[ind_edges] - edges.left[ind_edges])
+                if not np.isclose(total, 2 * ts.sequence_length):
+                    print('done:', j, n, total/(2*ts.sequence_length))
+                    done = True
+                    break
+                parent_ids = list(set([ts.node(u).individual for u in edges.parent[ind_edges]]))
+                if len(parent_ids) == 1:
+                    parent_ids = [parent_ids[0], parent_ids[0]]
+                parents = [ts.individual(i) for i in parent_ids]
+                pc_dx = np.array([dW(p.location[0], ind.location[0], W) for p in parents])
+                pc_dt = np.array([p.time - ind.time for p in parents])
+                adx = np.array([dW(p.location[0], target.location[0], W) for p in parents])
+                adt = np.array([p.time - target.time for p in parents])
+                this_dx.append(np.mean(adx))
+                this_dt.append(np.mean(adt))
+                this_var.append(np.mean(adx**2 / adt))
+                this_pc_var.append(np.mean(pc_dx**2 / pc_dt))
+                next_inds += parents
+            if done:
+                break
+            dx[n, j] = np.mean(this_dx)
+            dt[n, j] = np.mean(this_dt)
+            var[n, j] = np.mean(this_var)
+            pc_var[n, j] = np.mean(this_pc_var)
+            inds = next_inds
+    return dx, dt, var, pc_var
+
 
 for treefile in tsfiles:
     outbase = ".".join(treefile.split(".")[:-1])
@@ -133,7 +202,7 @@ for treefile in tsfiles:
     W = patchrows.shape[1]
 
     # global statistics
-    dx, dt, var, pc_var = global_var(ts, W, num_targets=50, max_n=1000)
+    dx, dt, var, pc_var = global_var(ts, W, num_targets=num_targets, max_n=max_n)
     with open(outfile, 'w') as f:
         print("\t".join(["n", "mean_dt", "sd_dt", "mean_var", "sd_var", "2.5%", "25%", "50%", "75%", "97.5%", "mean_pc_var", "sd_pc_var"]), file=f)
         for n in range(dt.shape[0]):
