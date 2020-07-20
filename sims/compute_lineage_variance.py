@@ -112,7 +112,8 @@ def global_var(ts, W, num_targets, record_steps):
     for j in range(max(record_steps) + 1):
         print(j)
         if j in record_steps:
-            pc_var[j, :] = pcR @ Ru
+            row = list(record_steps).index(j)
+            pc_var[row, :] = pcR @ Ru
         Ru = R.dot(Ru)
         if j in record_steps:
             row = list(record_steps).index(j)
