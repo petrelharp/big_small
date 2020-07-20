@@ -148,23 +148,25 @@ pdf(file="speeds.pdf", width=9, height=10, pointsize=10)
             keep <- (keep & (vartables[[pn]] == keep_params[[pn]]))
         }
         x <- subset(vartables, keep)
-        stopifnot(nrow(unique(x[,setdiff(names(defaults), plot_param)])) == 1)
-        main <- substitute(paste(gamma[m]==GAMMAM, ", ",
-                                 gamma[b]==GAMMAB, ", ",
-                                 p[bad]==PBAD, ", ",
-                                 p[good]==PGOOD), keep_params)
+        stopifnot(nrow(unique(x[,setdiff(names(defaults), plot_param)])) <= 1)
+        if (nrow(unique(x[,setdiff(names(defaults), plot_param)])) == 1) {
+            main <- substitute(paste(gamma[m]==GAMMAM, ", ",
+                                     gamma[b]==GAMMAB, ", ",
+                                     p[bad]==PBAD, ", ",
+                                     p[good]==PGOOD), keep_params)
 
-        plot(as.formula(paste("mean_var ~", plot_param)), data=x,
-             col=match(n, nvals), main=main, xlab=param_labels[[plot_param]],
-             ylim=c(0, 60))
-            abline(h=LOCAL_VARDT, col='red', lty=3)
-            abline(h=NAIVE_VARDT, col='blue', lty=3)
-        if (k == 3) {
-            legend("topright",
-                   pch=c(rep(1, length(nvals)), rep(NA,2)),
-                   lty=c(rep(NA, length(nvals)), rep(3,2)),
-                   col=c(seq_along(nvals), c('red', 'blue')),
-                   legend=c(nvals, 'parent-child', 'naive'), title='generations ago')
+            plot(as.formula(paste("mean_var ~", plot_param)), data=x,
+                 col=match(n, nvals), main=main, xlab=param_labels[[plot_param]],
+                 ylim=c(0, 60))
+                abline(h=LOCAL_VARDT, col='red', lty=3)
+                abline(h=NAIVE_VARDT, col='blue', lty=3)
+            if (k == 3) {
+                legend("topright",
+                       pch=c(rep(1, length(nvals)), rep(NA,2)),
+                       lty=c(rep(NA, length(nvals)), rep(3,2)),
+                       col=c(seq_along(nvals), c('red', 'blue')),
+                       legend=c(nvals, 'parent-child', 'naive'), title='generations ago')
+            }
         }
     }
 dev.off()

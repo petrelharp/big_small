@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import warnings
 import numpy as np
 import pyslim, tskit
 import scipy
@@ -26,6 +27,11 @@ num_targets = 50
 max_n = 1000
 # num_targets = 5
 # max_n = 10
+# How often to record output
+init_steps = 40
+num_steps = 25
+# whether to do lengthy error checking
+debug = False
 
 def dW(a, b, W):
     # shorter displacement in the W-circle
@@ -61,10 +67,10 @@ def local_var(ts, W):
     return dx[has_parents_nodes], dt[has_parents_nodes]
 
 
-def global_var(ts, W, num_targets, max_n):
+def global_var(ts, W, num_targets, record_steps):
     """
     Picks num_targets random individuals alive today
-    and returns (max_n, num_targets) arrays for each of
+    and returns (len(record_steps), num_targets) arrays for each of
     dx, dt, and var, giving the mean displacement, mean dt,
     and mean (dx**2/dt) across level-n ancestors.
     Also computes the mean parent-child (dx**2/dt) long those lineages.
@@ -98,35 +104,40 @@ def global_var(ts, W, num_targets, max_n):
     v *= dW(x[0,i], x[0,j], W)**2 / (t[0,i] - t[0,j])
     pcR = np.sum(scipy.sparse.csr_matrix((v, (i, j)), shape=R.shape), axis=0)
     # set up output
-    dx = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
-    dt = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
-    var = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
-    pc_var = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
-    for j in range(max_n):
-        pc_var[j, :] = pcR @ Ru
+    nsteps = len(record_steps)
+    dx = np.repeat(np.nan, nsteps * num_targets).reshape((nsteps, num_targets))
+    dt = np.repeat(np.nan, nsteps * num_targets).reshape((nsteps, num_targets))
+    var = np.repeat(np.nan, nsteps * num_targets).reshape((nsteps, num_targets))
+    pc_var = np.repeat(np.nan, nsteps * num_targets).reshape((nsteps, num_targets))
+    for j in range(max(record_steps) + 1):
+        print(j)
+        if j in record_steps:
+            pc_var[j, :] = pcR @ Ru
         Ru = R.dot(Ru)
-        dt[j, :] = t @ Ru - t0
-        totals = np.array(np.sum(Ru[has_parents, :], axis=0)).reshape((num_targets,))
-        badones = np.array(~np.isclose(totals, 1)).reshape((num_targets,))
-        pc_var[j, badones] = np.nan
-        dt[j, badones] = np.nan
-        for k in range(num_targets):
-            if np.isclose(totals[k], 1):
-                xdiff = dW(x, x0[k], W)
-                with np.errstate(invalid='ignore', divide='ignore'):
-                    z = xdiff**2 / (t - t0[k])
-                a = Ru[:, k]
-                dx[j, k] = xdiff @ a
-                znan = ~np.isfinite(z)
-                assert(np.sum(znan @ a) == 0)
-                z[znan] = 0
-                var[j, k] = z @ a
-        if np.all(badones):
-            print("All remaining probabilities less than 1:", totals)
-            print(f" stopping at generation {j}.")
-            break
-    if False: #   DEBUG
-        test_dx, test_dt, test_var, test_pc_var = naive_global_var(ts, W, targets, max_n)
+        if j in record_steps:
+            row = list(record_steps).index(j)
+            totals = np.array(np.sum(Ru[has_parents, :], axis=0)).reshape((num_targets,))
+            badones = np.array(~np.isclose(totals, 1)).reshape((num_targets,))
+            dt[row, :] = t @ Ru - t0
+            pc_var[row, badones] = np.nan
+            dt[row, badones] = np.nan
+            for k in range(num_targets):
+                if np.isclose(totals[k], 1):
+                    xdiff = dW(x, x0[k], W)
+                    with np.errstate(invalid='ignore', divide='ignore'):
+                        z = xdiff**2 / (t - t0[k])
+                    a = Ru[:, k]
+                    dx[row, k] = xdiff @ a
+                    znan = ~np.isfinite(z)
+                    assert(np.sum(znan @ a) == 0)
+                    z[znan] = 0
+                    var[row, k] = z @ a
+            if np.all(badones):
+                print("All remaining probabilities less than 1:", totals)
+                print(f" stopping at generation {j}.")
+                break
+    if debug:
+        test_dx, test_dt, test_var, test_pc_var = naive_global_var(ts, W, targets, record_steps)
         if not (np.allclose(dx, test_dx, equal_nan=True)
                 and np.allclose(dt, test_dt, equal_nan=True)
                 and np.allclose(var, test_var, equal_nan=True)
@@ -135,7 +146,7 @@ def global_var(ts, W, num_targets, max_n):
     return dx, dt, var, pc_var
 
 
-def naive_global_var(ts, W, targets, max_n):
+def naive_global_var(ts, W, targets, record_steps):
     """
     Naive implementation of global_var( ) that should always agree (but be slower);
     used for testing.
@@ -143,15 +154,16 @@ def naive_global_var(ts, W, targets, max_n):
     num_targets = len(targets)
     has_parents = ts.has_individual_parents()
     indiv_nodes = np.isin(ts.tables.nodes.individual, np.where(has_parents)[0])
-    dx = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
-    dt = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
-    var = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
-    pc_var = np.repeat(np.nan, max_n * num_targets).reshape((max_n, num_targets))
+    nsteps = len(record_steps)
+    dx = np.repeat(np.nan, nsteps * num_targets).reshape((nsteps, num_targets))
+    dt = np.repeat(np.nan, nsteps * num_targets).reshape((nsteps, num_targets))
+    var = np.repeat(np.nan, nsteps * num_targets).reshape((nsteps, num_targets))
+    pc_var = np.repeat(np.nan, nsteps * num_targets).reshape((nsteps, num_targets))
     edges = ts.tables.edges
     for j, target in enumerate([ts.individual(t) for t in targets]):
         inds = [target]
         done = False
-        for n in range(max_n):
+        for n in range(max(record_steps) + 1):
             this_dx = []
             this_dt = []
             this_var = []
@@ -181,11 +193,13 @@ def naive_global_var(ts, W, targets, max_n):
                 next_inds += parents
             if done:
                 break
-            dx[n, j] = np.mean(this_dx)
-            dt[n, j] = np.mean(this_dt)
-            var[n, j] = np.mean(this_var)
-            pc_var[n, j] = np.mean(this_pc_var)
             inds = next_inds
+            if n in record_steps:
+                row = list(record_steps).index(n)
+                dx[row, j] = np.mean(this_dx)
+                dt[row, j] = np.mean(this_dt)
+                var[row, j] = np.mean(this_var)
+                pc_var[row, j] = np.mean(this_pc_var)
     return dx, dt, var, pc_var
 
 
@@ -201,15 +215,21 @@ for treefile in tsfiles:
     patchrows = np.loadtxt(patchfile, max_rows=2)
     W = patchrows.shape[1]
 
+    # which time steps to record at
+    record_steps = [n for n in range(max_n) if n < init_steps or n % num_steps == 0]
+    
     # global statistics
-    dx, dt, var, pc_var = global_var(ts, W, num_targets=num_targets, max_n=max_n)
+    dx, dt, var, pc_var = global_var(ts, W, num_targets=num_targets, record_steps=record_steps)
     with open(outfile, 'w') as f:
         print("\t".join(["n", "mean_dt", "sd_dt", "mean_var", "sd_var", "2.5%", "25%", "50%", "75%", "97.5%", "mean_pc_var", "sd_pc_var"]), file=f)
         for n in range(dt.shape[0]):
-            print("\t".join(map(str,
-                [n, np.nanmean(dt[n,:]), np.nanstd(dt[n,:]), np.nanmean(var[n,:]), np.nanstd(var[n,:])]
-                + list(np.nanquantile(var[n,:], [.025, .25, .5, .75, .975]))
-                + [np.nanmean(pc_var[n,:]), np.nanstd(pc_var[n,:])])), file=f)
+            with warnings.catch_warnings():
+                # np.nanmean throws warnings when whole rows are nan
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                print("\t".join(map(str,
+                    [n, np.nanmean(dt[n,:]), np.nanstd(dt[n,:]), np.nanmean(var[n,:]), np.nanstd(var[n,:])]
+                    + list(np.nanquantile(var[n,:], [.025, .25, .5, .75, .975]))
+                    + [np.nanmean(pc_var[n,:]), np.nanstd(pc_var[n,:])])), file=f)
 
     if do_local:
         # local statistics
