@@ -36,6 +36,10 @@ read_varfile <- function (vf) {
 
 plot_varfile <- function(vf) {
     params <- parse_params(vf)
+    nlist <- params[c("W", "GAMMAB", "GAMMAM", "PBAD", "PGOOD", "seed")]
+    nlist <- nlist[!sapply(nlist, is.null)]
+    nstring <- paste(names(nlist), nlist, sep='=', collapse=', ')
+                     
     x <- read.table(vf, header=TRUE, check.names=FALSE)
     outfile <- gsub("txt$", "png", vf)
     if ("n" %in% names(x)) {
@@ -43,25 +47,31 @@ plot_varfile <- function(vf) {
         if (NROW(x) > 0) {
             png(file=outfile, width=6*144, height=6*144, res=144, pointsize=10)
                 layout(1:2)
+                par(mar=c(4,4,3,1)+.1)
                 matplot(x$n, x[,c("2.5%", "25%", "50%", "75%", "97.5%")],
                         type='l', lty=c(3,2,1,2,3), col='red',
                         xlab='number of generations',
                         ylab='variance per unit time',
-                        main=basename(vf),
-                        sub=paste(names(params), params, sep='=', collapse=', '))
+                        main=nstring)
                 lines(x$n, x$mean_var)
-                legend('topright', lty=c(1,3,2,1,2,3), col=c('black', rep('red', 5)),
-                       legend=c('mean', "2.5%", "25%", "50%", "75%", "97.5%"))
+                lines(x$n, x$mean_pc_var, col='blue', lty=4)
+                lines(50^2 / 1:1000, col='purple')
+                abline(h=LOCAL_VARDT, col='green', lty=2)
+                abline(h=NAIVE_VARDT, col='green', lty=3)
+                legend('topright', lty=c(1,3,2,1,2,3,4,2,3,1), col=c('black', rep('red', 5), 'blue', 'green', 'green', 'purple'),
+                       legend=c('mean', "2.5%", "25%", "50%", "75%", "97.5%", "lineage p-c", 'all p-c', 'naive', 'boundary'))
                 # again with lims
+                par(mar=c(4,4,1,1)+.1)
                 matplot(x$n, x[,c("2.5%", "25%", "50%", "75%", "97.5%")],
-                        xlim=c(0, 100), ylim=c(0, 100),
+                        xlim=c(0, 100), ylim=c(0, 25),
                         type='l', lty=c(3,2,1,2,3), col='red',
                         xlab='number of generations',
-                        ylab='variance per unit time',
-                        sub=paste(names(params), params, sep='=', collapse=', '))
+                        ylab='variance per unit time')
                 lines(x$n, x$mean_var)
-                legend('topright', lty=c(1,3,2,1,2,3), col=c('black', rep('red', 5)),
-                       legend=c('mean', "2.5%", "25%", "50%", "75%", "97.5%"))
+                lines(x$n, x$mean_pc_var, col='blue', lty=4)
+                lines(50^2 / 1:1000, col='purple')
+                abline(h=LOCAL_VARDT, col='green', lty=2)
+                abline(h=NAIVE_VARDT, col='green', lty=3)
             dev.off()
         }
     }
@@ -69,7 +79,8 @@ plot_varfile <- function(vf) {
 }
 
 varfiles <- list.files("big_small_1d", "*[.]variances.txt", full.names=TRUE)
-pngs <- lapply(varfiles, plot_varfile)
+pngs <- lapply(varfiles, plot_varfile)  # plot individual variance traces
+
 varlist <- lapply(varfiles, read_varfile)
 keep <- (sapply(varlist, length) > 0)
 varlist <- varlist[keep]
@@ -114,7 +125,7 @@ parvals$plotnum[with(parvals, GAMMAM == 0.1 & PBAD == 0.02 & PGOOD == 0.1)] <- 3
 parvals$plotnum[with(parvals, GAMMAM == 1.0 & PBAD == 0.02 & PGOOD == 0.1)] <- 4
 
 # extract at certain generations
-pdf(file="speeds.pdf", width=9, height=10, pointsize=10)
+pdf(file="speeds.pdf", width=7, height=10, pointsize=10)
     param_labels <- list(GAMMAB = expression(gamma[b]),
                          GAMMAM = expression(gamma[m]),
                          PBAD = expression(p[bad]),
@@ -136,14 +147,23 @@ pdf(file="speeds.pdf", width=9, height=10, pointsize=10)
                        plot4 = list(GAMMAM = 1.0,
                                     GAMMAB = "*",
                                     PBAD = 0.02,
+                                    PGOOD = 0.1),
+                       plot5 = list(GAMMAM = 3.0,
+                                    GAMMAB = "*",
+                                    PBAD = 0.05,
                                     PGOOD = 0.1))
+    include <- list(plot1 = (vartables$GAMMAM != 3.0),
+                    plot2 = TRUE,
+                    plot3 = TRUE,
+                    plot4 = TRUE,
+                    plot5 = TRUE)
 
-    nvals <- c(50, 100, 500, 999)
-    layout(matrix(1:4, nrow=2))
+    nvals <- c(5, 10, 50, 100)
+    layout(matrix(1:6, nrow=3))
     for (k in seq_along(plot_specs)) {
         keep_params <- plot_specs[[k]]
         plot_param <- names(keep_params[sapply(keep_params, "==", "*")])
-        keep <- (vartables$n %in% nvals)
+        keep <- include[[k]] & (vartables$n %in% nvals)
         for (pn in names(keep_params[sapply(keep_params, "!=", "*")])) {
             keep <- (keep & (vartables[[pn]] == keep_params[[pn]]))
         }
@@ -155,11 +175,16 @@ pdf(file="speeds.pdf", width=9, height=10, pointsize=10)
                                      p[bad]==PBAD, ", ",
                                      p[good]==PGOOD), keep_params)
 
-            plot(as.formula(paste("mean_var ~", plot_param)), data=x,
+            the_formula <- as.formula(paste("mean_var ~", plot_param))
+            plot(the_formula, data=x,
                  col=match(n, nvals), main=main, xlab=param_labels[[plot_param]],
-                 ylim=c(0, 60))
+                 ylim=c(0, 20))
                 abline(h=LOCAL_VARDT, col='red', lty=3)
                 abline(h=NAIVE_VARDT, col='blue', lty=3)
+            for (nn in nvals) {
+                the_lm <- lm(the_formula, data=x, subset=(n == nn))
+                abline(coef(the_lm), col=match(nn, nvals))
+            }
             if (k == 3) {
                 legend("topright",
                        pch=c(rep(1, length(nvals)), rep(NA,2)),
@@ -171,6 +196,35 @@ pdf(file="speeds.pdf", width=9, height=10, pointsize=10)
     }
 dev.off()
 
+# which ones not plotted?
+plotted <- rep(FALSE, nrow(vartables))
+for (ps in plot_specs) {
+    this_one <- rep(TRUE, nrow(vartables))
+    for (a in names(ps)) {
+        if (ps[[a]] != "*") {
+            this_one <- (this_one & vartables[[a]] == ps[[a]])
+        }
+    }
+    plotted <- (plotted | this_one)
+}
+with(subset(vartables, !plotted), table(GAMMAM, GAMMAB, PBAD, PGOOD))
+
+# parent-child along the lineage
+pdf(file="parent-child.pdf", width=7, height=10, pointsize=10)
+    nvals <- c(1, 10, 50, 100, 200, 500)
+    layout(matrix(1:6, nrow=3))
+    for (nn in nvals) {
+        plot(mean_var ~ mean_pc_var, data=vartables, subset=(n == nn),
+             pch=20,
+             col=1 + (GAMMAM >= 1),
+             xlim=c(0, max(vartables$mean_pc_var)),
+             ylim=c(0, max(vartables$mean_var)),
+             main=sprintf("%d time steps ago", nn),
+             xlab="parent-child dx^2/dt along lineages",
+             ylab="total dx^2/dt along lineages")
+        abline(0, 1)
+    }
+dev.off()
 
 ###########
 # Local stuff
