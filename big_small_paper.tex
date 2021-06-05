@@ -6,7 +6,7 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage[usenames,dvipsnames]{color}
 \usepackage{authblk}
-\usepackage[margin = 1.5in, includehead, includefoot]{geometry}
+\usepackage[margin = 1.5in, includehead, includefoot, headsep=0.3in]{geometry}
 
 \bibliographystyle{plainnat}
 
@@ -34,6 +34,7 @@
 \newcommand{\one}{\mathbf{1}}
 \newcommand{\aprod}[2]{{\langle{#1},{#2}\rangle}}
 \newcommand{\grad}{\nabla}
+\newcommand{\diffop}{\mathcal{L}}
 
 \newtheorem{definition}{Definition}
 \newtheorem{lemma}{Lemma}
@@ -608,63 +609,111 @@ without examining in detail what that means or how it is determined by the vital
 
 Recall that the rate of influx of establishing individuals from $x$ into $y$ at time $t$ is
 $\rho(x) q(y - x) r(y)$,
-and that the influx of pollen from $z$ into $x$ is $\rho(z) \delta(z) q_m(x - z)$.
-Let $R$ be a random seed dispersal displacement (i.e., $\P\{R = r\} = q(r)$),
-and let $S$ be a random pollen displacement (i.e., $\P\{S = r\} = q_m(r)$).
+and let $R$ be a random seed dispersal displacement (i.e., $\P\{R = r\} = q(r)$),
 Write $L_s$ for the location of the lineage $s$ units of time ago,
 and suppose that $L_0 = y$.
 Then, for a function $g( )$,
 \begin{align*}
-    \E[g(L_{ds}) \given L_0 = y]
+    \E[g(L_{dt}) \given L_0 = y]
     &\approx
         g(y) 
-        + \frac{1}{2} \frac{ds}{\rho(y)} \int \rho(x) \gamma(x) q(y - x) r(y) \left(g(x) - g(y)\right) dx \\
-    &\qquad{}
-        + \frac{1}{2} \frac{ds}{\rho(y)} \int \int \rho(z) \delta(z) q_m(x - z) \rho(x) \gamma(x) q(y - x) r(y) \left(g(z) - g(y)\right) dx \\
+        + \frac{dt}{\rho(y)} \int \rho(x) \gamma(x) q(y - x) r(y) \left(g(x) - g(y)\right) dx \\
     &=
         g(y) 
-        + \frac{1}{2} \frac{ds}{\rho(y)} \E\left[ \rho(y - R) \gamma(y - R) r(y) \left(g(y - R) - g(y)\right) \right]  \\
-    &\qquad{}
-        + \frac{1}{2} \frac{ds}{\rho(y)} \E\left[ \rho(y - R - S) \delta(y - R - S) \rho(y - R) \gamma(y - R) r(y) \left(g(y - R - S) - g(y)\right) \right] .
+        + \frac{dt}{\rho(y)} \E\left[ \rho(y - R) \gamma(y - R) r(y) \left(g(y - R) - g(y)\right) \right] .
 \end{align*}
-Now suppose that the mean and variance of $R$ and $S$ are all of the same small order:
-$\E[R] = m_m$ and $\cov[R] = \sigma_m^2 I$, while
-$\E[S] = m_p$ and $\cov[S] = \sigma_p^2 I$,
-with $m_m$, $m_p$, $\sigma_m^2$ and $\sigma_p^2$ all small and of similar size.
-Then, since $\E[R_i R_j] = \E[R_i] \E[R_j] + \cov[R_i, R_j] = (m_i m_j + \sigma^2 \delta_{ij})$,
+Now suppose that the mean and variance of $R$ are of the same small order:
+$\E[R] = m$ and $\cov[R] = C$,
+with $m_i$ and $C_{ij}$ small and of similar size for each $i$ and $j$.
+Then, since $\E[R_i R_j] = \E[R_i] \E[R_j] + \cov[R_i, R_j] = (m_i m_j + C_{ij})$,
 a Taylor expansion gives
 \begin{align*}
-    \E[f(R)]
+    \E[f(R) - f(0)]
     &\approx
-        f(0) + \sum_i \E[R_i] \frac{d}{dx_i} f(0) 
-            + \sum_{ij} \E[R_i R_j] \frac{d^2}{dx_i dx_j} f(0) \\
+        \sum_i \E[R_i] \partial_{x_i} f(0) 
+            + \sum_{ij} \E[R_i R_j] \partial_{x_i} \partial_{x_j} f(0) \\
     &=
-        f(0) + m \cdot \grad f(0) + \sigma^2 \nabla f(0)
-            + \sum_{ij} m_i m_j \frac{d^2}{dx_i dx_j} f(0) \\
+        \sum_i m_i \partial_{x_i} f(0) 
+            + \sum_{ij} \left(C_{ij} + m_i m_j\right) \partial_{x_i} \partial_{x_j} f(0) \\
     &=
-        f(0) + m \cdot \grad f(0) + \sigma^2 \nabla f(0) + O(|m|^2) .
+        \sum_i m_i \partial_{x_i} f(0) 
+            + \sum_{ij} C_{ij} \partial_{x_i} \partial_{x_j} f(0) + O(|m|^2) .
 \end{align*}
-Applying this to the expression above,
-with $f(r) = \rho(y - r) \gamma(y - r) (g(y - r) - g(y))$,
-we get that
+To save on writing subscripts, let's give a name to this differential operator:
 \begin{align*}
-    \E\left[ \rho(y - R) \gamma(y - R) r(y) \left(g(y - R) - g(y)\right) \right]  
-    &\approx
-            - \rho(y) \gamma(y) m \cdot \grad g(y)
-            + \sigma^2 \grad(\rho \gamma)(y) \cdot \grad g(y)
-            + \sigma^2 \rho(y) \gamma(y) \nabla g(y)  \\
-    &=
-        \left\{
-            \left(\sigma^2 \grad(\rho \gamma)(y) - \rho(y) \gamma(y) m \right) \cdot \grad 
-            + \sigma^2 \rho(y) \gamma(y) \nabla 
-        \right\} g(y)
+    \diffop(m, C) f(x) 
+    :=
+        \sum_i m_i \partial_{x_i} f(x) 
+            + \sum_{ij} C_{ij} \partial_{x_i} \partial_{x_j} f(x) .
 \end{align*}
-Similarly, if we let $Z = R + S$, then since $\rho(y - R) = \rho(y - Z) + O(m_p) + O(\sigma^2_p)$,
-and $\E[Z] = m_m + m_p$ and $\cov[Z] = (\sigma_m^2 + \sigma_p^2) I$,
-XXX
+Let's apply this to the expression above,
+with $f(r) = \rho(y - r) \gamma(y - r) (g(y - r) - g(y))$.
+First note that
+\begin{align*}
+    \partial_{x_i} f(0)
+    &= \rho(y) \gamma(y) \partial_{x_i} g(y),
+\end{align*}
+and that
+\begin{align*}
+    \partial_{x_i} \partial_{x_j} f(0)
+    &= \partial_{x_i} \left(\rho(y) \gamma(y)\right) \partial_{x_j} g(y)
+       + \partial_{x_j} \left(\rho(y) \gamma(y)\right) \partial_{x_i} g(y)
+       + \left(\rho(y) \gamma(y)\right) \partial_{x_i} \partial_{x_j} g(y) .
+\end{align*}
+Therefore, since $C$ is symmetric,
+\begin{align*}
+    &
+     \E\left[ \rho(y - R) \gamma(y - R) r(y) \left(g(y - R) - g(y)\right) \right]   \\
+    &\qquad
+     \approx
+         \rho(y) \gamma(y) \sum_i m_i \partial_{x_i} g(y) 
+         + \rho(y) \gamma(y) \sum_{ij} C_{ij} \partial_{x_i} \partial_{x_j} g(y)
+         + 2 \sum_{ij} C_{ij} \partial_{x_i} \left(\rho(y) \gamma(y)\right) \partial_{x_j} g(y)
+     \\
+     &\qquad
+     = \rho(y) \gamma(y) \left\{ \diffop(m,C) g(y) + 2 \grad(\log \rho(y) \gamma(y))^T C \grad g(y) \right\} .
+\end{align*}
+
+Putting this together,
+the motion of a lineage is described by
+\begin{align*}
+    \E[g(L_{dt}) \given L_0 = y]
+    &\approx
+    g(y) + r(y) \gamma(y)
+    \left\{ 
+        \diffop(m,C) g(y)
+        + 2 \grad(\log \rho(y) \gamma(y))^T C \grad g(y)
+    \right\} .
+\end{align*}
+This is what we'd expect from a random walk directed by $R$,
+but with an additional ``push''
+in the direction of twice the gradient of $\log(\rho(y) \gamma(y))$,
+multiplied by the dispersal covariance matrix $C$.
 
 
-
+What about pollen?
+Suppose the influx of pollen from $z$ into $x$ is $\rho(z) \delta(z) q_p(x - z)$,
+and let $P$ be a random pollen displacement (i.e., $\P\{P = r\} = q_p(r)$).
+Then as above we now have
+\begin{align*}
+    \E[g(L_{dt}) \given L_0 = y]
+    &\approx
+        g(y) 
+        + \frac{1}{2} \frac{dt}{\rho(y)} \int \rho(x) \gamma(x) q(y - x) r(y) \left(g(x) - g(y)\right) dx \\
+    &\qquad{}
+        + \frac{1}{2} \frac{dt}{\rho(y)} \int \int \rho(z) \delta(z) q_p(x - z) \rho(x) \gamma(x) q(y - x) r(y) \left(g(z) - g(y)\right) dx \\
+    &=
+        g(y) 
+        + \frac{1}{2} \frac{dt}{\rho(y)} \E\left[ \rho(y - R) \gamma(y - R) r(y) \left(g(y - R) - g(y)\right) \right]  \\
+    &\qquad{}
+        + \frac{1}{2} \frac{dt}{\rho(y)} \E\left[ \rho(y - R - P) \delta(y - R - P) \rho(y - R) \gamma(y - R) r(y) \left(g(y - R - P) - g(y)\right) \right] .
+\end{align*}
+Applying the above, first to $P$ and then to $R$, we get that
+\begin{align*}
+    &
+    \E\left[ \rho(y - R - P) \delta(y - R - P) \rho(y - R) \gamma(y - R) r(y) \left(g(y - R - P) - g(y)\right) \right] \\
+    &\approx \text{TODO THIS IS COMPLICATED}
+\end{align*}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%
