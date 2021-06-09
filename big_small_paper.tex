@@ -600,7 +600,7 @@ Proofs of whatever is left here.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%
-\section{More detailed diffusion approximation calculations}
+\section{Diffusion approximation calculations}
 
 Here we will work through in more detail the arguments that lead to the diffusion approximation
 for a lineage in a continuous landscape.
@@ -608,8 +608,9 @@ We still assume that the population has a continuous density,
 without examining in detail what that means or how it is determined by the vital rates.
 
 Recall that the rate of influx of establishing individuals from $x$ into $y$ at time $t$ is
-$\rho(x) q(y - x) r(y)$,
+$\rho(x) \gamma(x) q(y - x) r(y)$,
 and let $R$ be a random seed dispersal displacement (i.e., $\P\{R = r\} = q(r)$),
+For the moment, ignore the male gametes (so, we only follow a maternally inherited lineage).
 Write $L_s$ for the location of the lineage $s$ units of time ago,
 and suppose that $L_0 = y$.
 Then, for a function $g( )$,
@@ -651,7 +652,7 @@ with $f(r) = \rho(y - r) \gamma(y - r) (g(y - r) - g(y))$.
 First note that
 \begin{align*}
     \partial_{x_i} f(0)
-    &= \rho(y) \gamma(y) \partial_{x_i} g(y),
+    &= - \rho(y) \gamma(y) \partial_{x_i} g(y),
 \end{align*}
 and that
 \begin{align*}
@@ -666,55 +667,111 @@ Therefore, since $C$ is symmetric,
      \E\left[ \rho(y - R) \gamma(y - R) r(y) \left(g(y - R) - g(y)\right) \right]   \\
     &\qquad
      \approx
-         \rho(y) \gamma(y) \sum_i m_i \partial_{x_i} g(y) 
+         - \rho(y) \gamma(y) \sum_i m_i \partial_{x_i} g(y) 
          + \rho(y) \gamma(y) \sum_{ij} C_{ij} \partial_{x_i} \partial_{x_j} g(y)
          + 2 \sum_{ij} C_{ij} \partial_{x_i} \left(\rho(y) \gamma(y)\right) \partial_{x_j} g(y)
      \\
      &\qquad
-     = \rho(y) \gamma(y) \left\{ \diffop(m,C) g(y) + 2 \grad(\log \rho(y) \gamma(y))^T C \grad g(y) \right\} .
+     = \rho(y) \gamma(y) \left\{ \diffop(-m,C) g(y) + 2 \grad(\log \rho(y) \gamma(y))^T C \grad g(y) \right\} .
 \end{align*}
 
 Putting this together,
-the motion of a lineage is described by
+the motion of a maternal lineage is described by
 \begin{align*}
     \E[g(L_{dt}) \given L_0 = y]
     &\approx
     g(y) + r(y) \gamma(y)
     \left\{ 
-        \diffop(m,C) g(y)
+        \diffop(-m,C) g(y)
         + 2 \grad(\log \rho(y) \gamma(y))^T C \grad g(y)
     \right\} .
 \end{align*}
-This is what we'd expect from a random walk directed by $R$,
+This is what we'd expect from a random walk directed by $-R$,
 but with an additional ``push''
 in the direction of twice the gradient of $\log(\rho(y) \gamma(y))$,
 multiplied by the dispersal covariance matrix $C$.
+In other words, the generator for a maternal lineage is approximately
+\begin{align} \label{eqn:mat_generator}
+    r \gamma \diffop\left(- m + 2 C \grad(\log \rho \gamma), C \right) .
+\end{align}
 
-
-What about pollen?
-Suppose the influx of pollen from $z$ into $x$ is $\rho(z) \delta(z) q_p(x - z)$,
-and let $P$ be a random pollen displacement (i.e., $\P\{P = r\} = q_p(r)$).
-Then as above we now have
+What about male gametes, i.e., pollen?
+Suppose the rate of production of pollen at $z$ $\rho(z) \delta(z)$,
+and that the mean and covariance of pollen dispersal is $m^{(p)}$ and $C^{(p)}$ respectively.
+Applying the calculations above after replacing $\gamma$ by $\delta$ and setting $r = 1$,
+we see that a lineage that \emph{only} followed pollen movement
+(if for instance seeds traveled only very small distances)
+would have generator
 \begin{align*}
-    \E[g(L_{dt}) \given L_0 = y]
-    &\approx
-        g(y) 
-        + \frac{1}{2} \frac{dt}{\rho(y)} \int \rho(x) \gamma(x) q(y - x) r(y) \left(g(x) - g(y)\right) dx \\
-    &\qquad{}
-        + \frac{1}{2} \frac{dt}{\rho(y)} \int \int \rho(z) \delta(z) q_p(x - z) \rho(x) \gamma(x) q(y - x) r(y) \left(g(z) - g(y)\right) dx \\
+    \delta \diffop\left(-m^{(p)} + 2  C^{(p)} \grad(\log \rho \delta), C^{(p)} \right) .
+\end{align*}
+
+Now, the lineage at an autosomal locus will step from offspring to mother every generation,
+and then from mother to father half the time.
+Trotter's formula lets us avoid doing the nasty double Taylor series,
+and says that the combination of these two results in a generator of the form
+\begin{align} \label{eqn:final_generator}
+    \diffop\left(
+        - r \gamma m - \frac{1}{2} \delta m^{(p)} 
+        + 2 r \gamma C \grad(\log \rho \gamma)
+        + \delta C^{(p)} \grad(\log \rho \delta)
+        ,
+        C + \frac{1}{2} C^{(p)}
+    \right) .
+\end{align}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Stationary distributions for reversible lineages}
+
+In some cases, the process whose generator is described in \eqref{eqn:final_generator}
+is reversible, which allows us to find its stationary distribution.
+Let's work out when this happens:
+suppose that $C$ is a (fixed) symmetric matrix and $a(x)$ is a function,
+and consider the following symmetric form
+(for functions $f$ and $g$ such that the boundary terms dissappear):
+\begin{align*}
+    \langle f, g \rangle
+    &:=
+    \int a(x) \sum_{ij} C_{ij} \partial_{x_i} f(x) \partial_{x_j} g(x) dx \\
     &=
-        g(y) 
-        + \frac{1}{2} \frac{dt}{\rho(y)} \E\left[ \rho(y - R) \gamma(y - R) r(y) \left(g(y - R) - g(y)\right) \right]  \\
-    &\qquad{}
-        + \frac{1}{2} \frac{dt}{\rho(y)} \E\left[ \rho(y - R - P) \delta(y - R - P) \rho(y - R) \gamma(y - R) r(y) \left(g(y - R - P) - g(y)\right) \right] .
+    - \int f(x) \sum_{ij} C_{ij} \partial_{x_i} \left( a(x) \partial_{x_j} g(x) \right) dx \\
+    &=
+    - \int f(x) \sum_{ij} C_{ij} \left(
+        \left[\partial_{x_i} a(x)\right] \left[\partial_{x_j} g(x)\right]
+        + a(x) \partial_{x_i} \partial_{x_j} g(x) \right) dx \\
+    &=
+    - \int f(x) \diffop\left( C \grad a(x), a(x) C \right) g(x) dx \\
+    &=
+    - \int f(x) a(x) \diffop\left( C \grad \log a(x), C \right) g(x) dx .
 \end{align*}
-Applying the above, first to $P$ and then to $R$, we get that
+(Note that if $C$ varies across space then there is another term.)
+This implies that if a process has generator
+$\mathcal{G} = s(x) \diffop(C \grad \log a(x), C)$,
+then letting $\pi(x) = a(x) / s(x)$,
 \begin{align*}
-    &
-    \E\left[ \rho(y - R - P) \delta(y - R - P) \rho(y - R) \gamma(y - R) r(y) \left(g(y - R - P) - g(y)\right) \right] \\
-    &\approx \text{TODO THIS IS COMPLICATED}
+    \int \pi(x) f(x) \mathcal{G} g(x) dx
+    &=
+        \int f(x) a(x) \diffop\left( C \grad \log a(x), C \right) dx \\
+    &=
+        \langle f, g \rangle ,
 \end{align*}
+which is symmetric, and so the process is reversible with respect to $\pi$.
 
+For instance, if $m$ is constant,
+generator \eqref{eqn:mat_generator} is of this form,
+and is reversible with respect to
+\begin{align}
+    \pi(x) &= \frac{\rho(x) \gamma(x) e^{-m^T C^{-1} x / 2}}{ r(x) \gamma(x) } \\
+        &= \frac{\rho(x)}{r(x)} e^{-m^T C^{-1} x / 2} .
+\end{align}
+
+Similarly, if $h$ is the elevation and $m(x) = \alpha \grad h(x)$
+(e.g., if $\alpha < 0$ then dispersal is downhill),
+and $C = \sigma^2 I$,
+then the stationary distribution is
+\begin{align}
+    \pi(x) &= \frac{\rho(x)}{r(x)} e^{-\alpha h(x) / \sigma^2} .
+\end{align}
 
 %%%%%%%%%%%%%%%%%%%%%%%
 \section{Proof of X}
