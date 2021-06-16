@@ -1,36 +1,60 @@
+library(Matrix)
 
 update_dist <- function (mu, x) {
     U <- Matrix::bandSparse(
-            length(mu),
+            length(x),
             k=c(-1,0,1)
     ) * 1.0
     U[1, ncol(U)] <- U[nrow(U), 1] <- 1.0
-    P <- t(U * x)
-    z <- (rowSums(P) == 0)
+    P <- Matrix::t(U * x)
+    z <- (Matrix::rowSums(P) == 0)
     P[z, ] <- U[z, ]
-    P <- P / rowSums(P)
+    P <- P / Matrix::rowSums(P)
     return( mu %*% P )
 }
 stopifnot(all(
-    update_dist(c(0,0,1,0,0), rep(1,5))
+    update_dist(t(c(0,0,1,0,0)), rep(1,5))
     ==
     c(0, 1/3, 1/3, 1/3, 0)
 ))
 stopifnot(all(
-    update_dist(c(0,0,1,0,0), rep(0,5))
+    update_dist(t(c(0,0,1,0,0)), rep(0,5))
     ==
     c(0, 1/3, 1/3, 1/3, 0)
 ))
 stopifnot(all(
-    update_dist(c(0,0,1,0,0), c(0,0,1,1,1))
+    update_dist(t(c(0,0,1,0,0)), c(0,0,1,1,1))
     ==
     c(0, 0, 1/2, 1/2, 0)
 ))
 stopifnot(all(
-    update_dist(c(1,0,1,0,0), c(0,0,1,1,1))
+    update_dist(t(c(1,0,1,0,0)), c(0,0,1,1,1))
     ==
     c(0, 0, 1/2, 1/2, 1)
 ))
+
+patch_lengths <- function (x) {
+    starts <- which(diff(c(x, x[1])) > 0)
+    ends <- which(diff(c(x, x[1])) < 0)
+    if (length(ends) > 0 && ends[1] < starts[1]) {
+        ends <- c(ends[-1], ends[1] + length(x))
+    }
+    return(ends - starts)
+}
+stopifnot(all(
+      patch_lengths(c(1,1,0,1,0))
+      ==
+      c(1, 2)
+))
+stopifnot(all(
+      patch_lengths(c(1,1,0,1,1))
+      ==
+      c(4)
+))
+stopifnot(
+      length(patch_lengths(rep(0,10))) == 0
+)
+
 
 ###############################
 # copy of patch_functions.eidos
