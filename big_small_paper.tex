@@ -196,6 +196,7 @@ Since the structure of the habitat is random,
 we are studying a random walk in a random environment,
 which XXX is something other people study too CITE.
 
+NOTE: discuss \citet{birkner2013directed} and \citet{birkner2016random} somewhere.
 
 \subsection*{The basic model}
 
@@ -310,7 +311,7 @@ using a Taylor series,
 \begin{align} \label{eqn:taylor}
     \int f(x) q(y - x) dx % &= \int f(y - r) q(r) dr \\
     &= \E[f(y - R)] \\  % &= \E[f(y) - \E[R] \grad f(y) +  \ldots \\
-    &\approx f(y) - m \cdot \grad f(y) + \frac{\sigma^2}{2} \Delta f(y) ,
+    &\approx f(y) - m \cdot \grad f(y) + \sigma^2 \Delta f(y) ,
 \end{align}
 where $m \cdot \grad f(y) = \sum_i m_i \partial_{y_i} f(y)$
 and $\Delta f(y) = \sum_i \partial^2_{y_i} f(y)$.
@@ -328,11 +329,11 @@ this is
     &\approx
     \frac{r(y, t)}{\rho(y, t)} \left\{
             - m \left( \rho \gamma \right)(x, t)
-            + \frac{\sigma^2}{2} \grad\left( \rho \gamma \right)(y, t)
+            + \sigma^2 \grad\left( \rho \gamma \right)(y, t)
         \right\} dt \\
     &=
     r(y, t) \gamma(y, t) \left\{
-        \frac{\sigma^2}{2} \grad \log\left(\rho \gamma \right)(y, t) 
+        \sigma^2 \grad \log\left(\rho \gamma \right)(y, t) 
         - m 
     \right\} dt,
 \end{align*}
@@ -346,7 +347,7 @@ the variance of the displacement of the lineage is
         \frac{dt}{\rho(y, t)} \int (x - y)^2 \rho(x, t) \gamma(x, t) q(y - x) r(y, t) dx \\
     &\approx 
         % \frac{dt}{\rho(y, t)} \frac{\sigma^2}{2} \rho(y, t) \gamma(y, t) r(y, t) \\ &=
-        \frac{\sigma^2}{2} r(y, t) \gamma(y,t) dt .
+        \sigma^2 r(y, t) \gamma(y,t) dt .
 \end{align*}
 
 These describe the mean and variance of a time-inhomogeneous random walk across the landscape,
@@ -354,17 +355,21 @@ that is driven by the population dynamics.
 If the displacements across many generations are sufficiently independent,
 then $L_t$ is well-approximated by the diffusion that satisfies
 \begin{align}
-    dL_t = \gamma(L_t) \rho(L_t)
+    dL_t =  r(L_t) \gamma(L_t)
         \left\{
-            \left( \frac{\sigma^2}{2} \grad \log \left(\rho \gamma\right)(L_t) - m \right) dt
+            \left( 2 \sigma^2 \grad \log \left(\rho \gamma\right)(L_t) - m \right) dt
             + \sigma dB_t
         \right\} .
 \end{align}
 In words, this says that $L_t$ behaves like a Brownian motion
-run at speed $\sigma \gamma(y) \rho(y)$ when it is at location $y$,
+run at speed $\sigma r(y) \gamma(y)$ when it is at location $y$,
 in the potential
 \begin{align}
-    V(y) = \left(\rho(y) \gamma(y)\right)^{\sigma/2} e^{-my/\sigma} .
+    V(y) = \rho(y) \gamma(y) e^{-my/(2\sigma^2)} ,
+\end{align}
+which has stationary distribution
+\begin{align}
+    \pi(y) = \frac{\rho(y)}{r(y)} e^{-my/(2\sigma^2)} .
 \end{align}
 
 
@@ -621,7 +626,7 @@ Then, for a function $g( )$,
         + \frac{dt}{\rho(y)} \int \rho(x) \gamma(x) q(y - x) r(y) \left(g(x) - g(y)\right) dx \\
     &=
         g(y) 
-        + \frac{dt}{\rho(y)} \E\left[ \rho(y - R) \gamma(y - R) r(y) \left(g(y - R) - g(y)\right) \right] .
+        + dt \frac{r(y)}{\rho(y)} \E\left[ \rho(y - R) \gamma(y - R) \left(g(y - R) - g(y)\right) \right] .
 \end{align*}
 Now suppose that the mean and variance of $R$ are of the same small order:
 $\E[R] = m$ and $\cov[R] = C$,
